@@ -77,6 +77,9 @@ def _reject_unsafe_dns(host: str) -> None:
 
 
 def _reject_unsafe_ip(ip: ipaddress._BaseAddress) -> None:
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip in ipaddress.ip_network("64:ff9b::/96") or ip in ipaddress.ip_network("64:ff9b:1::/48"):
+            return
     if (
         ip.is_private
         or ip.is_loopback

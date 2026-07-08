@@ -18,19 +18,17 @@ class TTSProviderTest(unittest.TestCase):
     def setUp(self):
         self._env = os.environ.copy()
         self._load_provider = provider._load_provider
-        self._schema_dir = provider._AGENT_SCHEMA_DIR
 
     def tearDown(self):
         os.environ.clear()
         os.environ.update(self._env)
         provider._load_provider = self._load_provider
-        provider._AGENT_SCHEMA_DIR = self._schema_dir
         provider._AGENT_CONFIG_CACHE.clear()
 
     def test_default_provider_is_edge(self):
         os.environ.pop("TTS_PROVIDER", None)
         os.environ.pop("CARTESIA_AGENT_IDS", None)
-        self.assertEqual(provider._configured_provider(), "edge")
+        self.assertEqual(provider._configured_provider(), provider.DEFAULT_PROVIDER)
 
     def test_agent_allowlist_can_select_cartesia(self):
         os.environ["TTS_PROVIDER"] = "edge"
@@ -39,18 +37,19 @@ class TTSProviderTest(unittest.TestCase):
         self.assertEqual(provider._configured_provider("other-agent"), "edge")
 
     def test_agent_schema_can_select_cartesia(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            provider._AGENT_SCHEMA_DIR = Path(tmpdir)
+        from unittest.mock import patch, MagicMock
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.status = 200
+        mock_response.read.return_value = json.dumps({
+            "provider_config": {
+                "tts_provider": "cartesia",
+                "cartesia_voice_id": "95d51f79-c397-46f9-b49a-23763d3eaa2d",
+            }
+        }).encode("utf-8")
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
             provider._AGENT_CONFIG_CACHE.clear()
-            (Path(tmpdir) / "enterprise-agent.json").write_text(
-                json.dumps({
-                    "provider_config": {
-                        "tts_provider": "cartesia",
-                        "cartesia_voice_id": "95d51f79-c397-46f9-b49a-23763d3eaa2d",
-                    }
-                }),
-                encoding="utf-8",
-            )
             os.environ["TTS_PROVIDER"] = "edge"
 
             self.assertEqual(provider._configured_provider("enterprise-agent"), "cartesia")

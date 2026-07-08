@@ -71,7 +71,7 @@ VOICE_MAP = {
 
 DEFAULT_VOICE = VOICE_MAP["en"]
 
-def generate_speech_stream(text: str, preferred_language: str | None = None):
+def generate_speech_stream(text: str, preferred_language: str | None = None, voice_id: str | None = None):
     """
     Synchronous wrapper that yields PCM16 bytes chunks sequentially.
     Uses language-aware voice selection to ensure correct pronunciation.
@@ -85,11 +85,12 @@ def generate_speech_stream(text: str, preferred_language: str | None = None):
     bytes_out = 0
 
     # Select the best voice for the active language
-    voice = VOICE_MAP.get(preferred_language, DEFAULT_VOICE)
-    if preferred_language == "mr" and "mr-IN" not in voice:
-         voice = VOICE_MAP["mr"]
-    elif preferred_language in ("hi", "hinglish") and "hi-IN" not in voice:
-         voice = VOICE_MAP["hi"]
+    voice = voice_id or VOICE_MAP.get(preferred_language, DEFAULT_VOICE)
+    if not voice_id:
+        if preferred_language == "mr" and "mr-IN" not in voice:
+             voice = VOICE_MAP["mr"]
+        elif preferred_language in ("hi", "hinglish") and "hi-IN" not in voice:
+             voice = VOICE_MAP["hi"]
 
     # ── Text normalisation for faster-paced speech ──────────────────────
     # Expand abbreviations and clean up text so the neural voice stays

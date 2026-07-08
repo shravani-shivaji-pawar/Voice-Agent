@@ -22,7 +22,7 @@ from pipecat.pipeline.task import PipelineTask
 from pipecat.frames.frames import AudioRawFrame, EndFrame
 from pipecat.processors.frame_processor import FrameProcessor, FrameDirection
 
-from flows.runtime import RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor
+from flows.runtime import RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor, VADProcessor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("VOBIZ-SERVER")
@@ -81,12 +81,13 @@ async def vobiz_stream(websocket: WebSocket):
 
     # 1. Spin up isolated instances of our Pipecat processors for THIS CALL ONLY
     source = VoBizSource()
-    stt = RealEstateSTTProcessor()
+    vad = VADProcessor()
+    stt = RealEstateSTTProcessor(vad_enabled=False)
     llm = RealEstateLLMProcessor()
     tts = RealEstateTTSProcessor()
     sink = VoBizSink(websocket)
 
-    pipeline = Pipeline([source, stt, llm, tts, sink])
+    pipeline = Pipeline([source, vad, stt, llm, tts, sink])
     runner = PipelineRunner()
     task = PipelineTask(pipeline)
 

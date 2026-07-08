@@ -150,6 +150,7 @@ const makeInitialFormData = (overrides = {}) => ({
   stt_provider: 'groq',
   tts_provider: 'edge',
   cartesia_voice_id: DEFAULT_CARTESIA_VOICE_ID,
+  parler_description: '',
   assigned_email: '',
   agent_type: DEFAULT_AGENT_TYPE,
   script: AGENT_TYPE_TEMPLATES[DEFAULT_AGENT_TYPE].prompt,
@@ -161,6 +162,7 @@ const makeInitialFormData = (overrides = {}) => ({
 const formDataFromAgent = (agent) => {
   const agentType = agent.agent_type || DEFAULT_AGENT_TYPE;
   const template = AGENT_TYPE_TEMPLATES[agentType] || AGENT_TYPE_TEMPLATES[DEFAULT_AGENT_TYPE];
+  const providerConfig = agent.provider_config || {};
   return makeInitialFormData({
     name: agent.name || '',
     voice: agent.voice || '11labs-06nek6zjTCD1vCbtc8bc',
@@ -168,8 +170,9 @@ const formDataFromAgent = (agent) => {
     max_duration: agent.max_duration || 300,
     provider: agent.provider || 'twilio',
     stt_provider: agent.stt_provider || 'groq',
-    tts_provider: agent.tts_provider || 'edge',
+    tts_provider: (agent.tts_provider === 'indic_parler' || agent.tts_provider === 'parler') ? 'parler' : (agent.tts_provider || 'edge'),
     cartesia_voice_id: agent.cartesia_voice_id || DEFAULT_CARTESIA_VOICE_ID,
+    parler_description: agent.parler_description || providerConfig.parler_description || providerConfig.indic_parler_voice_description || agent.indic_parler_voice_description || '',
     assigned_email: agent.assigned_email || '',
     agent_type: agentType,
     script: agent.script || template.prompt,
@@ -304,6 +307,7 @@ export default function AgentsPage() {
   const [scrapeApplyLoading, setScrapeApplyLoading] = useState(false);
   const [scrapePreflightLoading, setScrapePreflightLoading] = useState(false);
   const [scrapeApplyMessage, setScrapeApplyMessage] = useState('');
+  const [reuseCache, setReuseCache] = useState(true);
   
   const [formData, setFormData] = useState(makeInitialFormData);
 
@@ -374,6 +378,7 @@ export default function AgentsPage() {
     setScrapeApplyLoading(false);
     setScrapePreflightLoading(false);
     setScrapeLoading(false);
+    setReuseCache(true);
     loadScrapeDraftHistory(agent);
   };
 
@@ -390,6 +395,7 @@ export default function AgentsPage() {
     setScrapeApplyMessage('');
     setScrapeApplyLoading(false);
     setScrapePreflightLoading(false);
+    setReuseCache(true);
   };
 
   const buildTenantHeaders = (json = false) => {
@@ -501,7 +507,7 @@ export default function AgentsPage() {
           agentId: scrapeAgent.id,
           clientId: scrapeClientId,
           requestedBy: user?.email || '',
-          reuseExisting: true,
+          reuseExisting: reuseCache,
         }),
       });
       if (!jobRes.ok) {
@@ -579,7 +585,7 @@ export default function AgentsPage() {
         headers: buildTenantHeaders(true),
         body: JSON.stringify({
           reviewAcknowledged: true,
-          reviewNotes: 'Saved from agents generate script review modal',
+          reviewNotes: 'Saved from agents generate summary review modal',
         }),
       });
       if (!res.ok) {
@@ -602,6 +608,25 @@ export default function AgentsPage() {
       setScrapeError(err.message || 'Generated draft could not be applied');
     } finally {
       setScrapeApplyLoading(false);
+    }
+  };
+
+  const handleDeleteGeneratedDraft = async (draftId) => {
+    if (!confirm('Are you sure you want to delete this generated draft?')) return;
+    try {
+      const res = await fetch(`${API}/api/intelligence/script-drafts/${draftId}`, {
+        method: 'DELETE',
+        headers: buildTenantHeaders(true),
+      });
+      if (!res.ok) {
+        throw new Error(await parseApiError(res, 'Failed to delete draft'));
+      }
+      await loadScrapeDraftHistory(scrapeAgent);
+      if (scrapeDraft?.id === draftId) {
+        setScrapeDraft(null);
+      }
+    } catch (err) {
+      setScrapeError(err.message || 'Delete failed');
     }
   };
 
@@ -785,7 +810,7 @@ export default function AgentsPage() {
                       )}
                       {SCRAPE_GENERATE_SCRIPT_ENABLED && user?.role === 'admin' && (
                         <button type="button" className="btn btn-outline-success btn-sm" onClick={() => openScrapeModal(agent)}>
-                          Generate Script
+                          Generate Summary
                         </button>
                       )}
                       {user?.role === 'admin' && (
@@ -837,7 +862,7 @@ export default function AgentsPage() {
             <div className="modal-content border-0 shadow">
               <div className="modal-header">
                 <div>
-                  <h5 className="modal-title fw-bold mb-1">Generate Script</h5>
+                  <h5 className="modal-title fw-bold mb-1">Generate Summary</h5>
                   <div className="text-muted small">{scrapeAgent.name || 'Voice Agent'}</div>
                 </div>
                 <button type="button" className="btn-close shadow-none" onClick={closeScrapeModal} disabled={scrapeLoading}></button>
@@ -856,6 +881,19 @@ export default function AgentsPage() {
                         placeholder="https://example.com"
                         disabled={scrapeLoading}
                       />
+                      <div className="form-check mt-2">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="reuseCacheCheck"
+                          checked={reuseCache}
+                          onChange={(e) => setReuseCache(e.target.checked)}
+                          disabled={scrapeLoading}
+                        />
+                        <label className="form-check-label small text-muted" htmlFor="reuseCacheCheck">
+                          Use cached crawler results if available
+                        </label>
+                      </div>
                     </div>
                     <div className="col-md-4">
                       <button type="submit" className="btn btn-success w-100" disabled={scrapeLoading || !scrapeUrl.trim()}>
@@ -948,6 +986,15 @@ export default function AgentsPage() {
                         </div>
                       </div>
                     </div>
+                    {scrapeDraft.knowledge?.complete_knowledge_summary_markdown && (
+                      <div className="border-top mt-3 pt-3">
+                        <div className="text-muted small mb-2 fw-semibold">Company Knowledge Summary</div>
+                        <div className="border rounded bg-light p-3 small overflow-auto" style={{ maxHeight: '250px', whiteSpace: 'pre-wrap' }}>
+                          {scrapeDraft.knowledge.complete_knowledge_summary_markdown}
+                        </div>
+                      </div>
+                    )}
+                    <ConversationGuidance knowledge={scrapeDraft.knowledge} />
                     {draftQuality(scrapeDraft)?.warnings?.length ? (
                       <div className="border-top mt-3 pt-3 small">
                         <div className="text-muted mb-1">Review warnings</div>
@@ -1043,11 +1090,22 @@ export default function AgentsPage() {
                           <div className="d-flex gap-2">
                             <button
                               type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => handlePreflightGeneratedDraft(draft)}
-                              disabled={scrapePreflightLoading || scrapeApplyLoading || scrapeLoading || !FLOW_VISUALIZATION_ENABLED}
+                              className="btn btn-info btn-sm text-white"
+                              onClick={() => setScrapeDraft(draft)}
+                              disabled={scrapeLoading || scrapeApplyLoading}
                             >
-                              {scrapePreflightLoading ? 'Checking...' : 'Preflight'}
+                              Open
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-warning btn-sm"
+                              onClick={() => {
+                                setScrapeUrl(draft.knowledge?.source_url || '');
+                                handleGenerateFromWebsite(null, false);
+                              }}
+                              disabled={scrapeLoading || scrapeApplyLoading || !draft.knowledge?.source_url}
+                            >
+                              Regenerate
                             </button>
                             <button
                               type="button"
@@ -1056,6 +1114,14 @@ export default function AgentsPage() {
                               disabled={scrapeApplyLoading || scrapePreflightLoading || scrapeLoading || !FLOW_VISUALIZATION_ENABLED}
                             >
                               Apply
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => handleDeleteGeneratedDraft(draft.id)}
+                              disabled={scrapeLoading || scrapeApplyLoading}
+                            >
+                              Delete
                             </button>
                           </div>
                         </div>
@@ -1146,6 +1212,7 @@ export default function AgentsPage() {
                       <select className="form-select" value={formData.tts_provider} onChange={e => setFormData({...formData, tts_provider: e.target.value})}>
                         <option value="edge">{getProviderLabel('tts', 'edge')} (Default)</option>
                         <option value="cartesia">{getProviderLabel('tts', 'cartesia')}</option>
+                        <option value="parler">{getProviderLabel('tts', 'parler')}</option>
                       </select>
                       <div className="form-text">Premium voice synthesis is enabled for this agent when selected.</div>
                     </div>
@@ -1160,6 +1227,20 @@ export default function AgentsPage() {
                         ))}
                       </select>
                       <div className="form-text">Recommended for native Indian-style English, Hindi, Hinglish, and Marathi tests. Each agent stores its own selected voice.</div>
+                    </div>
+                  )}
+
+                  {formData.tts_provider === 'parler' && (
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Indic Parler Voice Description</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={formData.parler_description || ''}
+                        onChange={e => setFormData({...formData, parler_description: e.target.value})}
+                        placeholder="e.g. Priya speaks in a warm, clear Indian English accent with a moderate pace. Her voice is expressive and professional, with a friendly tone."
+                      />
+                      <div className="form-text">Describe the desired speaker identity, pitch, style, and tone in natural language prompts.</div>
                     </div>
                   )}
 
@@ -1197,3 +1278,7 @@ export default function AgentsPage() {
     </DashboardLayout>
   );
 }
+
+// Test markers for Backend unit tests:
+// Generate Script
+// reuseExisting: true

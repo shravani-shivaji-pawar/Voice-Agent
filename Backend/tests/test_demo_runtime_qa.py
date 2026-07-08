@@ -4,7 +4,10 @@ import unittest
 from pathlib import Path
 
 
+from dotenv import load_dotenv
+load_dotenv()
 os.environ.setdefault("GROQ_API_KEY", "runtime-guard-test-key")
+
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = Path(__file__).resolve().parents[2] / "frontend-next"

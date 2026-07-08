@@ -187,7 +187,7 @@ def _build_llm_user_message(
 ) -> str:
     """Build the user message matching the clean prompt format."""
     phrases_block = "\n".join(f"- {p}" for p in json_phrases) if json_phrases else "(none)"
-    already_asked_str = ", ".join([k for k, v in asked_flags.items() if v]) if asked_flags else "None"
+    collected_details_str = ", ".join([k for k, v in context_data.items() if v and k not in {"memory", "asked_flags", "last_response", "active_language"}]) or "None"
     
     # Dynamically build the context fields block
     context_lines = []
@@ -204,7 +204,7 @@ def _build_llm_user_message(
         f"context:\n"
         f"{context_block}\n"
         f"  language: {language}\n"
-        f"  already_asked: {already_asked_str}\n"
+        f"  collected_details: {collected_details_str}\n"
         f"  last_response: {last_response or 'None'}\n\n"
         f"user_input: \"{user_input}\""
     )
@@ -219,8 +219,8 @@ def _answer_user_question(question_type: str, language: str, state_manager: Opti
     global_prompt = ""
     if state_manager:
         agent_name = state_manager.schema.get("agent_name", "Agent")
-        agent_type = state_manager.schema.get("agent_type", "real_estate_sales")
-        global_prompt = state_manager.schema.get("global_prompt", "")
+        agent_type = state_manager.schema.get("agent_metadata", {}).get("agent_type") or state_manager.schema.get("agent_type") or "real_estate_sales"
+        global_prompt = (state_manager.global_prompt or state_manager.schema.get("global_prompt", "")) if hasattr(state_manager, "global_prompt") else state_manager.schema.get("global_prompt", "")
 
     type_label = {
         "real_estate_sales": "Real Estate team",
@@ -229,15 +229,24 @@ def _answer_user_question(question_type: str, language: str, state_manager: Opti
         "education": "Education counselling team",
         "recruitment": "Recruitment team",
         "healthcare": "Healthcare team",
-    }.get(agent_type, "Customer support team")
+    }.get(agent_type)
+    if not type_label:
+        if "sales" in agent_type.lower():
+            type_label = "Sales team"
+        elif "advisory" in agent_type.lower() or "advisor" in agent_type.lower():
+            type_label = "Advisory team"
+        else:
+            type_label = "Customer support team"
 
     purpose_desc = "following up on your request"
-    if "patient" in global_prompt.lower() or "clinic" in global_prompt.lower():
+    if agent_type == "healthcare" or "clinic" in global_prompt.lower() or "doctor" in global_prompt.lower():
         purpose_desc = "scheduling your doctor's appointment"
-    elif "recruit" in global_prompt.lower() or "job" in global_prompt.lower() or "candidate" in global_prompt.lower():
+    elif agent_type == "recruitment" or "job application" in global_prompt.lower():
         purpose_desc = "your job application"
-    elif "property" in global_prompt.lower() or "real estate" in global_prompt.lower():
+    elif agent_type == "real_estate_sales" or "property" in global_prompt.lower() or "real estate" in global_prompt.lower():
         purpose_desc = "your property interest"
+    elif agent_type == "education" or "course interest" in global_prompt.lower() or "admission" in global_prompt.lower():
+        purpose_desc = "your course inquiry"
 
     if language in ("hi", "hinglish"):
         if question_type == "identity":
@@ -453,7 +462,8 @@ def build_response_system_prompt(state_manager: Optional[Any], language: str) ->
     prompt_builder.append("- Max 20-30 words.")
     prompt_builder.append("- Ask exactly ONE question matching the current node's missing slots.")
     prompt_builder.append("- Avoid repetition. Never repeat the previous question if you have already got the answer.")
-    prompt_builder.append("- NEVER invent or hallucinate any details (like specific budgets, cities, dates, times, or property details) that have not been explicitly confirmed by the user or present in your script.")
+    prompt_builder.append("- STRICT TRUTH AND ANTI-HALLUCINATION RULE: NEVER assume, guess, invent, or hallucinate any facts, details, locations, amenities, pricing, timeline, or specifications. You are strictly allowed to use facts explicitly mentioned in the 'Primary Agent Script' or 'json_phrases'.")
+    prompt_builder.append("- MISSING INFORMATION FALLBACK: If the user asks a question about details not explicitly provided in your prompt or script (such as specific flat sizes, amenities, project launch dates, interest rates, or doctor degrees), you MUST say: 'I don't have that detail right now, but I can check and have our advisor get back to you.' (or localized equivalent), and then immediately proceed to the current node goal.")
     prompt_builder.append("- Plain text only. No JSON, no markdown, no conversational role labels.")
     
     return "\n".join(prompt_builder)
@@ -636,8 +646,8 @@ async def generate_response_for_turn(turn: TurnResult, state_manager: Optional[A
         logger.info("[TERMINAL RESPONSE] %s: \"%s\"", node_id, finalized)
         return finalized
 
-    if node_id == "fallback_location" and _is_location_suggestion_request(user_input):
-        return _location_suggestion_response(language)
+    if node_id in {"fallback_location", "fallback-city"} and _is_location_suggestion_request(user_input):
+        return _location_suggestion_response(language, state_manager)
 
     response = _resolve_template_response(node, context, language)
     finalized = _finalize_response(response) if response else ""
@@ -673,12 +683,50 @@ def _is_location_suggestion_request(user_input: str) -> bool:
     return any(hint in text for hint in hints)
 
 
-def _location_suggestion_response(language: str) -> str:
+def _get_suggested_locations(state_manager: Optional[Any]) -> list[str]:
+    if not state_manager or not hasattr(state_manager, "schema"):
+        return ["Wakad", "Baner", "Hinjewadi", "Kharadi"]
+    
+    schema = state_manager.schema
+    if not schema:
+        return ["Wakad", "Baner", "Hinjewadi", "Kharadi"]
+
+    by_city = schema.get("project_quick_reference", {}).get("by_city")
+    if by_city and isinstance(by_city, dict):
+        return list(by_city.keys())
+        
+    projects = schema.get("all_projects", [])
+    if projects and isinstance(projects, list):
+        cities = set()
+        for p in projects:
+            city = p.get("location", {}).get("city")
+            if city:
+                cities.add(city)
+        if cities:
+            return sorted(list(cities))
+            
+    return ["Wakad", "Baner", "Hinjewadi", "Kharadi"]
+
+
+def _location_suggestion_response(language: str, state_manager: Optional[Any] = None) -> str:
+    locs = _get_suggested_locations(state_manager)
+    locs_str = ", ".join(locs[:-1]) + f", or {locs[-1]}" if len(locs) > 1 else locs[0]
+    
     if language in ("hi", "hinglish"):
-        return "Aap Wakad, Baner, Hinjewadi, ya Kharadi consider kar sakte ho. Inmein se kaunsa area better lagega?"
+        if "Wakad" in locs:
+            return f"Aap {', '.join(locs[:-1])} ya {locs[-1]} consider kar sakte ho. Inmein se kaunsa area better lagega?"
+        else:
+            return f"Aap {', '.join(locs[:-1])} ya {locs[-1]} dekh sakte hain. Aapko kaunsa city prefer hoga?"
     if language == "mr":
-        return "Wakad, Baner, Hinjewadi, ani Kharadi changle options aahet. Tyapeki konta area jasta suit hoil?"
-    return "You can consider Wakad, Baner, Hinjewadi, or Kharadi. Which area sounds closest?"
+        if "Wakad" in locs:
+            return f"{', '.join(locs[:-1])} ani {locs[-1]} changle options aahet. Tyapeki konta area jasta suit hoil?"
+        else:
+            return f"{', '.join(locs[:-1])} ani {locs[-1]} options aahet. Tyapeki konta city prefer ahe?"
+    
+    if "Wakad" in locs:
+        return f"You can consider {locs_str}. Which area sounds closest?"
+    else:
+        return f"You can consider {locs_str}. Which city are you looking at?"
 
 
 def _get_anti_repeat_nudge(node: dict[str, Any], language: str, context: Optional[dict] = None) -> str:

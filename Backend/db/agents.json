@@ -91,5 +91,28 @@
         "id": "ea2e03c2-e6d0-4437-bebc-acd3eb2eb01a",
         "schema_path": "db\\agents\\ea2e03c2-e6d0-4437-bebc-acd3eb2eb01a.json",
         "createdAt": "2026-04-14T00:54:46.415359"
+    },
+    {
+        "name": "Priya \u2014 Real Estate Specialist (Indic Parler)",
+        "voice": "indic_parler",
+        "language": "Multi (English, Hinglish, Marathi, Hindi)",
+        "max_duration": 300,
+        "provider": "Pipecat-AI Execution",
+        "tts_provider": "indic_parler",
+        "script": "You are Priya from the Real Estate AI team. Qualify property leads with a warm, charismatic tone. Detect language naturally (English, Hinglish, Marathi). Uses AI4Bharat Indic Parler TTS for authentic Indian language voice synthesis.",
+        "data_fields": [
+            "Name",
+            "Location",
+            "Budget",
+            "Property Type",
+            "Intent",
+            "Interested",
+            "Visit Date",
+            "Visit Time",
+            "Callback Preference"
+        ],
+        "id": "priya_indic_parler_001",
+        "schema_path": "db/agents/priya_indic_parler_agent.json",
+        "createdAt": "2026-06-27T00:00:00.000000"
     }
 ]

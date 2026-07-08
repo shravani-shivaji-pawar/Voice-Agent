@@ -52,7 +52,15 @@ class _LinkExtractor(HTMLParser):
 class WebsiteCrawler:
     """Bounded same-domain crawler with SSRF validation on every URL."""
 
-    def __init__(self, *, user_agent: str = "VoiceAgentWebsiteIntelligence/1.0") -> None:
+    def __init__(
+        self,
+        *,
+        user_agent: str = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        ),
+    ) -> None:
         self.user_agent = user_agent
 
     async def crawl(
@@ -79,9 +87,16 @@ class WebsiteCrawler:
                 continue
             visited.add(safe.normalized_url)
 
-            page = await self._fetch_page(safe, max_bytes=bytes_remaining, timeout_s=timeout_s)
-            pages.append(page)
-            bytes_remaining -= len(page.body.encode("utf-8", errors="ignore"))
+            try:
+                page = await self._fetch_page(safe, max_bytes=bytes_remaining, timeout_s=timeout_s)
+                pages.append(page)
+                bytes_remaining -= len(page.body.encode("utf-8", errors="ignore"))
+            except Exception as exc:
+                if not pages:
+                    raise CrawlError(f"crawl fetch failed for start URL {safe.domain}: {exc}") from exc
+                else:
+                    logger.warning("Crawl fetch failed for subpage %s, skipping: %s", safe.normalized_url, exc)
+                    continue
 
             if "html" not in page.content_type.lower():
                 continue
@@ -118,11 +133,24 @@ class WebsiteCrawler:
             safe.normalized_url,
             headers={
                 "User-Agent": self.user_agent,
-                "Accept": "text/html,text/plain,application/xhtml+xml;q=0.9,*/*;q=0.5",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
             },
         )
         try:
-            with urlopen(request, timeout=timeout_s) as response:
+            try:
+                response_ctx = urlopen(request, timeout=timeout_s)
+            except Exception as ssl_err:
+                err_str = str(ssl_err).lower()
+                if "cert" in err_str or "ssl" in err_str or "verify" in err_str or "handshake" in err_str:
+                    logger.warning("[CRAWLER] SSL validation failed for %s, retrying with unverified context: %s", safe.domain, ssl_err)
+                    import ssl
+                    ctx = ssl._create_unverified_context()
+                    response_ctx = urlopen(request, timeout=timeout_s, context=ctx)
+                else:
+                    raise
+
+            with response_ctx as response:
                 raw = response.read(max_bytes + 1)
                 if len(raw) > max_bytes:
                     raise CrawlError("crawl byte limit exceeded")
@@ -139,7 +167,7 @@ class WebsiteCrawler:
         except CrawlError:
             raise
         except Exception as exc:
-            raise CrawlError(f"crawl fetch failed for {safe.domain}") from exc
+            raise CrawlError(f"crawl fetch failed for {safe.domain}: {exc}") from exc
 
 
 def _extract_same_domain_links(html: str, base_url: str, root_domain: str) -> list[str]:

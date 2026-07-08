@@ -1,0 +1,211 @@
+{
+  "agent_name": "Test Agent",
+  "global_prompt": "Website intelligence source: https://www.cisco.com.\nVerified business name: AI Infrastructure, Secure Networking, and Software Solutions.\nRelevant website sections found: services; blog; about; faq.\nVerified products/services: Mythos and other AI innovations are rewriting the cyberthreat playbook; The critical infrastructure for the AI era; Trusted by 99% of the Fortune 500 and over 1 million customers worldwide; Market-defining technologies driving the future of AI; Cisco Cloud Control.\nWebsite-backed value points: Digital resilience Keep your organization securely up and running in the face of any disruption\u2014from cyberattacks to third-party outages and other technical failures.; Contact Cisco \u200b\u200bGet started\u200b Get expert guidance on the purchasing path that works best for your needs.; Whether you\u2019re just starting out, advancing to expert level, or upskilling a team, Learn with Cisco fuels your tech learning journey..\nQualification questions to collect: Which service are you most interested in?; When are you planning to make a decision?.\nObjection guidance: price_concern: Acknowledge budget concern and offer to match options to their range.; needs_time: Offer a short follow-up slot instead of pressuring the caller..\nUse only verified website facts and keep unsupported claims out of the call.",
+  "conversation_flow_id": "flowv2_1fd0fe84aafc",
+  "conversationFlow": {
+    "conversation_flow_id": "flowv2_1fd0fe84aafc",
+    "version": 2,
+    "schema_version": "2.0",
+    "global_prompt": "Website intelligence source: https://www.cisco.com.\nVerified business name: AI Infrastructure, Secure Networking, and Software Solutions.\nRelevant website sections found: services; blog; about; faq.\nVerified products/services: Mythos and other AI innovations are rewriting the cyberthreat playbook; The critical infrastructure for the AI era; Trusted by 99% of the Fortune 500 and over 1 million customers worldwide; Market-defining technologies driving the future of AI; Cisco Cloud Control.\nWebsite-backed value points: Digital resilience Keep your organization securely up and running in the face of any disruption\u2014from cyberattacks to third-party outages and other technical failures.; Contact Cisco \u200b\u200bGet started\u200b Get expert guidance on the purchasing path that works best for your needs.; Whether you\u2019re just starting out, advancing to expert level, or upskilling a team, Learn with Cisco fuels your tech learning journey..\nQualification questions to collect: Which service are you most interested in?; When are you planning to make a decision?.\nObjection guidance: price_concern: Acknowledge budget concern and offer to match options to their range.; needs_time: Offer a short follow-up slot instead of pressuring the caller..\nUse only verified website facts and keep unsupported claims out of the call.",
+    "start_node_id": "start",
+    "nodes": [
+      {
+        "id": "start",
+        "name": "Greeting",
+        "type": "conversation",
+        "instruction": {
+          "type": "prompt",
+          "text": "Follow the published Flow V2 node 'Greeting' and keep the reply concise."
+        },
+        "response": "Hello, this is Test Agent. Am I speaking with {{name}}?",
+        "edges": [
+          {
+            "id": "edge_start_1_discovery",
+            "condition": "confirm",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "confirm"
+            },
+            "destination_node_id": "discovery"
+          },
+          {
+            "id": "edge_start_2_end",
+            "condition": "deny",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "deny"
+            },
+            "destination_node_id": "end"
+          },
+          {
+            "id": "edge_start_3_fallback",
+            "condition": "unclear",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "unclear"
+            },
+            "destination_node_id": "fallback"
+          }
+        ],
+        "start_speaker": "agent",
+        "intent_triggers": [
+          "call_connected"
+        ]
+      },
+      {
+        "id": "discovery",
+        "name": "Discovery",
+        "type": "conversation",
+        "instruction": {
+          "type": "prompt",
+          "text": "Follow the published Flow V2 node 'Discovery' and keep the reply concise."
+        },
+        "response": "Could you share a little about what you are looking for?",
+        "edges": [
+          {
+            "id": "edge_discovery_1_confirm_followup",
+            "condition": "provide info",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "provide info"
+            },
+            "destination_node_id": "confirm_followup"
+          },
+          {
+            "id": "edge_discovery_2_confirm_followup",
+            "condition": "confirm",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "confirm"
+            },
+            "destination_node_id": "confirm_followup"
+          },
+          {
+            "id": "edge_discovery_3_fallback",
+            "condition": "unclear",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "unclear"
+            },
+            "destination_node_id": "fallback"
+          }
+        ],
+        "intent_triggers": [
+          "confirm",
+          "provide_info"
+        ]
+      },
+      {
+        "id": "fallback",
+        "name": "Clarify",
+        "type": "fallback",
+        "instruction": {
+          "type": "prompt",
+          "text": "Follow the published Flow V2 node 'Clarify' and keep the reply concise."
+        },
+        "response": "Sorry, I did not catch that clearly. Could you repeat it once?",
+        "edges": [
+          {
+            "id": "edge_fallback_1_discovery",
+            "condition": "provide info",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "provide info"
+            },
+            "destination_node_id": "discovery"
+          },
+          {
+            "id": "edge_fallback_2_discovery",
+            "condition": "confirm",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "confirm"
+            },
+            "destination_node_id": "discovery"
+          },
+          {
+            "id": "edge_fallback_3_end",
+            "condition": "deny",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "deny"
+            },
+            "destination_node_id": "end"
+          }
+        ],
+        "intent_triggers": [
+          "unclear"
+        ],
+        "fallback": {
+          "max_attempts": 2,
+          "escalation_target": "end"
+        }
+      },
+      {
+        "id": "confirm_followup",
+        "name": "Confirm Follow-up",
+        "type": "conversation",
+        "instruction": {
+          "type": "prompt",
+          "text": "Follow the published Flow V2 node 'Confirm Follow-up' and keep the reply concise."
+        },
+        "response": "Thanks. I will have the team follow up with the right details.",
+        "edges": [
+          {
+            "id": "edge_confirm_followup_1_end",
+            "condition": "confirm",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "confirm"
+            },
+            "destination_node_id": "end"
+          },
+          {
+            "id": "edge_confirm_followup_2_end",
+            "condition": "deny",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "deny"
+            },
+            "destination_node_id": "end"
+          },
+          {
+            "id": "edge_confirm_followup_3_fallback",
+            "condition": "unclear",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "unclear"
+            },
+            "destination_node_id": "fallback"
+          }
+        ],
+        "intent_triggers": [
+          "confirm",
+          "provide_info"
+        ]
+      },
+      {
+        "id": "end",
+        "name": "End",
+        "type": "end",
+        "instruction": {
+          "type": "prompt",
+          "text": "Follow the published Flow V2 node 'End' and keep the reply concise."
+        },
+        "response": "Thank you. Have a good day.",
+        "edges": [],
+        "intent_triggers": [
+          "confirm",
+          "deny"
+        ]
+      }
+    ]
+  },
+  "agent_metadata": {
+    "flow_v2_live": true,
+    "flow_v2_artifact_path": "db\\agents\\test-agent.a1954beb.live.flow.v2.json",
+    "flow_v2_published_at": "2026-07-03T20:54:07.942890",
+    "flow_v2_published_by": "shravani772004@gmail.com",
+    "flow_v2_runtime_backup_path": null
+  }
+}

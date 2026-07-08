@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useAuth, clientProfile } from '@/context/AuthContext';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useVoiceSocket } from '@/hooks/useVoiceSocket';
@@ -8,21 +9,44 @@ export default function TalkLive() {
   const profile = currentRole === 'client' && user?.agentId
     ? { name: user.clientName || user.name, agent: user.agentName || 'Assigned Agent', agentId: user.agentId }
     : clientProfile[activeClient];
-  const agentId = profile?.agentId || user?.agentId || 'default';
   
-  const { connect, disconnect, isConnected, statusText, transcripts, clearTranscripts } = useVoiceSocket(agentId, activeClient);
+  const [agents, setAgents] = useState([]);
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiBase}/api/agents`);
+        if (res.ok) {
+          const data = await res.json();
+          setAgents(data);
+          // Determine initial default agent selection
+          const defaultId = profile?.agentId || user?.agentId || (data.length > 0 ? data[0].id : 'default');
+          setSelectedAgentId(defaultId);
+        }
+      } catch (err) {
+        console.error("Failed to fetch agents", err);
+      }
+    };
+    fetchAgents();
+  }, [profile, user]);
+
+  const { connect, disconnect, isConnected, statusText, transcripts, clearTranscripts } = useVoiceSocket(selectedAgentId, activeClient);
 
   const toggleCall = () => {
     if (isConnected) disconnect();
     else connect(false, user?.name || profile?.name || 'Demo User'); // isDemo = false
   };
 
+  const selectedAgentName = agents.find(ag => ag.id === selectedAgentId)?.name || profile?.agent || 'Agent';
+
   return (
     <DashboardLayout>
       <div className="d-flex justify-content-between align-items-start mb-4">
         <div>
           <h2 className="h4 fw-bold mb-1">Talk Live</h2>
-          <p className="text-muted small mb-0">Test your agent ({profile?.agent}) directly from your browser mic instantly.</p>
+          <p className="text-muted small mb-0">Test your agent directly from your browser mic instantly.</p>
         </div>
         <div 
           className="rounded-circle mt-2" 
@@ -35,6 +59,29 @@ export default function TalkLive() {
         <div className="col-md-4">
           <div className="card shadow-sm border-0">
             <div className="card-body text-center p-5">
+              <div className="mb-4 text-start">
+                <label className="form-label small fw-bold text-muted text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                  Select Agent to Test
+                </label>
+                <select 
+                  className="form-select shadow-sm" 
+                  value={selectedAgentId} 
+                  onChange={(e) => setSelectedAgentId(e.target.value)}
+                  disabled={isConnected}
+                >
+                  {agents.map((ag) => (
+                    <option key={ag.id} value={ag.id}>
+                      {ag.name}
+                    </option>
+                  ))}
+                  {agents.length === 0 && (
+                    <option value={selectedAgentId || 'default'}>
+                      {profile?.agent || 'Default Agent'}
+                    </option>
+                  )}
+                </select>
+              </div>
+
               <div 
                 className="d-flex align-items-center justify-content-center mx-auto mb-4 text-white"
                 style={{ 
@@ -46,7 +93,7 @@ export default function TalkLive() {
               >
                 🎙️
               </div>
-              <h5 className="fw-bold">{profile?.agent}</h5>
+              <h5 className="fw-bold">{selectedAgentName}</h5>
               <p className="text-muted small mb-4">{statusText}</p>
               <button 
                 className={`btn btn-lg w-100 fw-bold border-0 shadow-sm ${isConnected ? 'btn-danger' : 'btn-dark'}`}

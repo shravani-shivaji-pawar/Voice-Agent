@@ -20,13 +20,11 @@ class STTProviderTest(unittest.TestCase):
     def setUp(self):
         self._env = os.environ.copy()
         self._run_provider = provider._run_provider
-        self._schema_dir = provider._AGENT_SCHEMA_DIR
 
     def tearDown(self):
         os.environ.clear()
         os.environ.update(self._env)
         provider._run_provider = self._run_provider
-        provider._AGENT_SCHEMA_DIR = self._schema_dir
         provider._AGENT_CONFIG_CACHE.clear()
 
     def test_default_provider_is_groq(self):
@@ -41,15 +39,17 @@ class STTProviderTest(unittest.TestCase):
         self.assertEqual(provider._configured_provider("other-agent"), "groq")
 
     def test_agent_schema_can_select_deepgram(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            provider._AGENT_SCHEMA_DIR = Path(tmpdir)
-            provider._AGENT_CONFIG_CACHE.clear()
-            (Path(tmpdir) / "enterprise-agent.json").write_text(
-                json.dumps({"provider_config": {"stt_provider": "deepgram"}}),
-                encoding="utf-8",
-            )
-            os.environ["STT_PROVIDER"] = "groq"
+        from unittest.mock import patch, MagicMock
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.status = 200
+        mock_response.read.return_value = json.dumps({
+            "provider_config": {"stt_provider": "deepgram"}
+        }).encode("utf-8")
 
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            provider._AGENT_CONFIG_CACHE.clear()
+            os.environ["STT_PROVIDER"] = "groq"
             self.assertEqual(provider._configured_provider("enterprise-agent"), "deepgram")
 
             os.environ["STT_DISABLE_AGENT_OVERRIDES"] = "true"

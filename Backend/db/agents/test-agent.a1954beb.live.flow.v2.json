@@ -1,0 +1,244 @@
+{
+  "schema_version": "2.0",
+  "id": "flowv2_1fd0fe84aafc",
+  "agent_id": "test-agent",
+  "agent_name": "Test Agent",
+  "agent_type": "real_estate_sales",
+  "status": "published",
+  "runtime_mode": "live",
+  "default_locale": "en",
+  "supported_locales": [
+    "en",
+    "hi",
+    "mr"
+  ],
+  "start_node_id": "start",
+  "global_prompt": "Website intelligence source: https://www.cisco.com.\nVerified business name: AI Infrastructure, Secure Networking, and Software Solutions.\nRelevant website sections found: services; blog; about; faq.\nVerified products/services: Mythos and other AI innovations are rewriting the cyberthreat playbook; The critical infrastructure for the AI era; Trusted by 99% of the Fortune 500 and over 1 million customers worldwide; Market-defining technologies driving the future of AI; Cisco Cloud Control.\nWebsite-backed value points: Digital resilience Keep your organization securely up and running in the face of any disruption\u2014from cyberattacks to third-party outages and other technical failures.; Contact Cisco \u200b\u200bGet started\u200b Get expert guidance on the purchasing path that works best for your needs.; Whether you\u2019re just starting out, advancing to expert level, or upskilling a team, Learn with Cisco fuels your tech learning journey..\nQualification questions to collect: Which service are you most interested in?; When are you planning to make a decision?.\nObjection guidance: price_concern: Acknowledge budget concern and offer to match options to their range.; needs_time: Offer a short follow-up slot instead of pressuring the caller..\nUse only verified website facts and keep unsupported claims out of the call.",
+  "slots": [],
+  "intents": [
+    {
+      "id": "confirm",
+      "examples": [
+        "yes",
+        "okay",
+        "sure"
+      ]
+    },
+    {
+      "id": "deny",
+      "examples": [
+        "no",
+        "not interested"
+      ]
+    },
+    {
+      "id": "unclear",
+      "examples": [
+        "hmm",
+        "repeat"
+      ]
+    },
+    {
+      "id": "provide_info",
+      "examples": [
+        "my budget is 50 lakh"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "message",
+      "label": "Greeting",
+      "response": {
+        "en": "Hello, this is Test Agent. Am I speaking with {{name}}?"
+      },
+      "transitions": [
+        {
+          "intent": "confirm",
+          "target": "discovery"
+        },
+        {
+          "intent": "deny",
+          "target": "end"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback"
+        }
+      ]
+    },
+    {
+      "id": "discovery",
+      "type": "slot_collection",
+      "label": "Discovery",
+      "collects": [],
+      "response": {
+        "en": "Could you share a little about what you are looking for?"
+      },
+      "transitions": [
+        {
+          "intent": "provide_info",
+          "target": "confirm_followup"
+        },
+        {
+          "intent": "confirm",
+          "target": "confirm_followup"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback"
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "type": "fallback",
+      "label": "Clarify",
+      "response": {
+        "en": "Sorry, I did not catch that clearly. Could you repeat it once?"
+      },
+      "fallback": {
+        "max_attempts": 2,
+        "escalation_target": "end"
+      },
+      "transitions": [
+        {
+          "intent": "provide_info",
+          "target": "discovery"
+        },
+        {
+          "intent": "confirm",
+          "target": "discovery"
+        },
+        {
+          "intent": "deny",
+          "target": "end"
+        }
+      ]
+    },
+    {
+      "id": "confirm_followup",
+      "type": "message",
+      "label": "Confirm Follow-up",
+      "response": {
+        "en": "Thanks. I will have the team follow up with the right details."
+      },
+      "transitions": [
+        {
+          "intent": "confirm",
+          "target": "end"
+        },
+        {
+          "intent": "deny",
+          "target": "end"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "End",
+      "response": {
+        "en": "Thank you. Have a good day."
+      },
+      "transitions": []
+    }
+  ],
+  "metadata": {
+    "source": "website_intelligence",
+    "source_language": "English",
+    "validation_required": true,
+    "source_url": "https://www.cisco.com",
+    "industry": "real_estate_sales",
+    "review_required": true,
+    "website_intelligence": {
+      "domain": "www.cisco.com",
+      "source_url": "https://www.cisco.com",
+      "industry": "real_estate_sales",
+      "advisory_only": true,
+      "auto_publish": false,
+      "quality": {
+        "score": 100,
+        "level": "high",
+        "ready_for_review": true,
+        "warnings": []
+      },
+      "evidence_urls": [
+        "https://www.cisco.com",
+        "https://www.cisco.com/site/us/en/buy/index.html?linkclickid=hdr-utilnav-howtobuy",
+        "https://www.cisco.com/site/us/en/learn/training-certifications/index.html",
+        "https://www.cisco.com/site/us/en/products/networking/silicon-one/index.html",
+        "https://www.cisco.com/site/us/en/products/networking/switches/c9350-series-smart-switches/index.html",
+        "https://www.cisco.com/site/us/en/products/security/index.html",
+        "https://www.cisco.com/site/us/en/about/why-cisco/race-to-agentic-ai-report.html",
+        "https://www.cisco.com/site/us/en/buy/index.html",
+        "https://www.cisco.com/c/en/us/about/legal/privacy-full.html",
+        "https://www.cisco.com/site/us/en/about/contact-cisco/index.html?linkclickid=hero-howtobuy",
+        "https://www.cisco.com/site/us/en/partners/index.html",
+        "https://www.cisco.com/site/us/en/about/contact-cisco/index.html?linkclickid=ftr-howtobuy"
+      ],
+      "content_inventory": {
+        "page_types": {
+          "services": 14,
+          "blog": 1,
+          "about": 4,
+          "faq": 1
+        },
+        "has_services": true,
+        "has_faq": true,
+        "has_contact": false,
+        "noise_filtered": true
+      },
+      "review_checklist": [
+        {
+          "key": "human_review_required",
+          "label": "Human review required before publishing",
+          "passed": true
+        },
+        {
+          "key": "quality_ready_for_review",
+          "label": "Extraction quality is ready for review",
+          "passed": true
+        },
+        {
+          "key": "source_evidence_present",
+          "label": "Website evidence URLs are attached",
+          "passed": true
+        },
+        {
+          "key": "services_detected",
+          "label": "Products or services were detected",
+          "passed": true
+        },
+        {
+          "key": "conversation_guidance_present",
+          "label": "Qualification or objection guidance is present",
+          "passed": true
+        },
+        {
+          "key": "noise_filtered",
+          "label": "Crawler noise filtering was applied",
+          "passed": true
+        }
+      ],
+      "limitations": [
+        "Only public website content fetched within configured crawl limits was used.",
+        "Human review is required before publishing any generated workflow."
+      ]
+    },
+    "applied_from_script_draft_id": "c5d7f74d-a69a-460f-9a7a-791a491637ca",
+    "live_runtime_unchanged": false,
+    "published_at": "2026-07-03T20:54:07.906974",
+    "published_to": "v1_runtime_schema"
+  },
+  "validation": {
+    "status": "valid",
+    "node_count": 5,
+    "terminal_count": 1
+  }
+}

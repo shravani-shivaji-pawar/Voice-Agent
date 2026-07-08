@@ -30,7 +30,7 @@ def _safe_next(gen):
 _ml_semaphore = asyncio.Semaphore(4)
 
 try:
-    from pipecat.frames.frames import AudioRawFrame, Frame, TextFrame, CancelFrame
+    from pipecat.frames.frames import AudioRawFrame, Frame, TextFrame, CancelFrame, EndFrame
     from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 except ImportError:
     logging.error("pipecat-ai is not installed. Pipeline will fail.")
@@ -40,6 +40,7 @@ except ImportError:
     TextFrame = None
     AudioRawFrame = None
     CancelFrame = None
+    EndFrame = None
 
 from llm.llm import generate_response
 from llm.language_utils import LanguageTracker, analyze_user_text, localize_template
@@ -58,7 +59,7 @@ try:
 except ImportError:
     logging.warning("stt.stt.transcribe_audio not available yet. Using mock STT.")
 
-    def transcribe_audio(audio_chunk: bytes, agent_id: str = "default") -> str:
+    def transcribe_audio(audio_chunk: bytes, agent_id: str = "default", language: str | None = None) -> str:
         return "mock transcription"
 
 try:
@@ -88,9 +89,10 @@ _KNOWN_HALLUCINATION_PHRASES = (
 )
 
 
-@dataclass
 class AgentTextFrame(TextFrame):
-    language: str = "en"
+    def __init__(self, text: str, language: str = "en"):
+        super().__init__(text)
+        self.language = language
 
 
 class VoiceTurnState:
@@ -324,12 +326,189 @@ class RealEstateLLMProcessor(FrameProcessor):
             logger.error("[PIPELINE] LLM -> Failed forwarding agent reply frame: %s", exc)
 
 
+class VADProcessor(FrameProcessor):
+    """Voice Activity Detection preprocessing layer."""
+
+    def __init__(
+        self,
+        turn_state: VoiceTurnState | None = None,
+        min_voice_start_ms: int | None = None,
+        max_speech_duration_ms: int | None = None,
+        silence_timeout_ms: int | None = None,
+        noise_multiplier: float | None = None,
+        base_threshold: float | None = None,
+        max_threshold: float | None = None,
+    ):
+        super().__init__()
+        self.turn_state = turn_state
+        self.audio_buffer = bytearray()
+        
+        # Expose parameters as configurable, falling back to stt_cfg
+        effective_min_ms = min_voice_start_ms or getattr(stt_cfg, "VAD_MIN_VOICE_START_MS", stt_cfg.MIN_CHUNK_MS)
+        effective_max_ms = max_speech_duration_ms or getattr(stt_cfg, "VAD_MAX_SPEECH_DURATION_MS", 4500)
+        effective_trailing_ms = silence_timeout_ms or getattr(stt_cfg, "VAD_SILENCE_TIMEOUT_MS", 600)
+        
+        self.min_chunk_bytes = _ms_to_bytes(effective_min_ms, stt_cfg.TARGET_SAMPLE_RATE)
+        self.max_chunk_bytes = _ms_to_bytes(effective_max_ms, stt_cfg.TARGET_SAMPLE_RATE)
+        self.trailing_window_bytes = _ms_to_bytes(effective_trailing_ms, stt_cfg.TARGET_SAMPLE_RATE)
+        
+        self.noise_floor_percentile = getattr(stt_cfg, "VAD_NOISE_FLOOR_PERCENTILE", 10.0)
+        self.noise_multiplier = noise_multiplier or getattr(stt_cfg, "VAD_NOISE_MULTIPLIER", 6.0)
+        self.base_threshold = base_threshold or getattr(stt_cfg, "VAD_BASE_THRESHOLD", 0.007)
+        self.max_threshold = max_threshold or getattr(stt_cfg, "VAD_MAX_THRESHOLD", 0.018)
+        
+        self.is_speaking = False
+        self._voice_hits = 0
+        self._voiced_ms = 0.0
+        self._last_voice_at = 0.0
+        self._speech_end_silence_ms = float(effective_trailing_ms)
+        self._barge_in_min_ms = 550.0
+        self._barge_in_sent = False
+        self._cooldown_until = 0.0
+        self.noise_floor = 0.010
+        self._rms_history = []
+
+    async def process_frame(self, frame: Frame, direction: FrameDirection = None):  # type: ignore
+        await super().process_frame(frame, direction)
+        if not isinstance(frame, AudioRawFrame):
+            await self.push_frame(frame, direction)
+            return
+
+        pcm16 = _ensure_pcm16(frame.audio, frame.sample_rate, stt_cfg.TARGET_SAMPLE_RATE)
+        if not pcm16: return
+
+        # Ignore inbound mic audio while TTS is actively speaking (or in short post-TTS cooldown).
+        if self.turn_state and self.turn_state.is_stt_blocked():
+            self.audio_buffer.clear()
+            self.is_speaking = False
+            self._voice_hits = 0
+            self._voiced_ms = 0.0
+            self._barge_in_sent = False
+            return
+        if time.monotonic() < self._cooldown_until:
+            return
+
+        # Calculate current RMS
+        samples = np.frombuffer(pcm16, dtype=np.int16).astype(np.float32)
+        chunk_rms = float(np.sqrt(np.mean(samples**2)) / 32768.0)
+        chunk_duration_ms = (len(samples) / stt_cfg.TARGET_SAMPLE_RATE) * 1000.0
+        if logger.isEnabledFor(logging.INFO) and chunk_rms > 0.005:
+            logger.info(
+                "[VAD] <- Audio frame bytes=%d duration_ms=%.1f rms=%.4f speaking=%s blocked=%s",
+                len(pcm16),
+                chunk_duration_ms,
+                chunk_rms,
+                self.is_speaking,
+                bool(self.turn_state and self.turn_state.is_stt_blocked()),
+            )
+        
+        # Continuous Calibration: Track bottom percentile of energy as noise floor
+        self._rms_history.append(chunk_rms)
+        if len(self._rms_history) > 50:
+            self._rms_history.pop(0)
+            self.noise_floor = float(np.percentile(self._rms_history, self.noise_floor_percentile))
+        
+        # Adaptive activation threshold:
+        dynamic_threshold = max(self.noise_floor * self.noise_multiplier, self.noise_floor + 0.004, self.base_threshold)
+        dynamic_threshold = min(dynamic_threshold, self.max_threshold)
+        now_mono = time.monotonic()
+        voice_presence_threshold = max(dynamic_threshold * 0.50, self.noise_floor + 0.0025)
+        strong_voice_threshold = max(dynamic_threshold * 1.20, self.noise_floor + 0.008)
+
+        # Ignore silence/background chunks.
+        if not self.is_speaking:
+            if chunk_rms >= strong_voice_threshold:
+                self._voice_hits = 2
+            elif chunk_rms > dynamic_threshold:
+                self._voice_hits += 1
+            else:
+                self._voice_hits = max(0, self._voice_hits - 1)
+                self._voiced_ms = 0.0
+                return
+            if self._voice_hits < 2:
+                return
+            self.is_speaking = True
+            self._voice_hits = 0
+            self._voiced_ms = 0.0
+            self._barge_in_sent = False
+            self._last_voice_at = now_mono
+            self.audio_buffer.clear()
+            logger.info(
+                "[VAD DEBUG] RMS=%.4f threshold=%.4f floor=%.4f speaking=True",
+                chunk_rms,
+                dynamic_threshold,
+                self.noise_floor,
+            )
+            logger.info(
+                "[VAD EVENT] speech_start timestamp=%.3f rms=%.4f threshold=%.4f floor=%.4f source_rate=%d",
+                time.time(),
+                chunk_rms,
+                dynamic_threshold,
+                self.noise_floor,
+                getattr(frame, "sample_rate", 0),
+            )
+
+        self._voiced_ms += chunk_duration_ms
+        if chunk_rms >= voice_presence_threshold:
+            self._last_voice_at = now_mono
+
+        # Barge-in cancellation: only when TTS is actively speaking and speech is sustained.
+        if (
+            not self._barge_in_sent
+            and self.turn_state
+            and self.turn_state.tts_active
+            and self._voiced_ms >= self._barge_in_min_ms
+        ):
+            self._barge_in_sent = True
+            logger.info(
+                "[VAD] -> Sustained speech detected during TTS (%.0fms). Emitting CancelFrame.",
+                self._voiced_ms,
+            )
+            await self.push_frame(CancelFrame(), direction)
+
+        self.audio_buffer.extend(pcm16)
+        if len(self.audio_buffer) < self.min_chunk_bytes:
+            return
+
+        silence_elapsed_ms = (now_mono - self._last_voice_at) * 1000.0
+        if len(self.audio_buffer) < self.max_chunk_bytes and silence_elapsed_ms < self._speech_end_silence_ms:
+            return
+        if len(self.audio_buffer) < self.max_chunk_bytes and not _has_trailing_silence(
+            self.audio_buffer,
+            self.trailing_window_bytes,
+            voice_presence_threshold,
+        ):
+            return
+
+        chunk = bytes(self.audio_buffer)
+        buffered_ms = (len(self.audio_buffer) / 2.0) / float(stt_cfg.TARGET_SAMPLE_RATE) * 1000.0
+        logger.info(
+            "[VAD EVENT] speech_end timestamp=%.3f buffered_ms=%.1f bytes=%d silence_ms=%.1f voiced_ms=%.1f",
+            time.time(),
+            buffered_ms,
+            len(self.audio_buffer),
+            silence_elapsed_ms,
+            self._voiced_ms,
+        )
+        self.audio_buffer.clear()
+        self.is_speaking = False
+        self._barge_in_sent = False
+        self._voice_hits = 0
+        self._voiced_ms = 0.0
+        
+        # Emit complete buffered audio frame to downstream STT
+        out_frame = AudioRawFrame(audio=chunk, sample_rate=stt_cfg.TARGET_SAMPLE_RATE, num_channels=1)
+        _ensure_frame_runtime_attrs(out_frame)
+        await self.push_frame(out_frame, direction)
+
+
 class RealEstateSTTProcessor(FrameProcessor):
     """Low-latency STT with Adaptive VAD (Noise Floor Calibration)."""
 
-    def __init__(self, turn_state: VoiceTurnState | None = None, agent_id: str = "default"):
+    def __init__(self, turn_state: VoiceTurnState | None = None, agent_id: str = "default", vad_enabled: bool = True):
         super().__init__()
         self.agent_id = agent_id or "default"
+        self.vad_enabled = vad_enabled
         self.audio_buffer = bytearray()
         effective_max_ms = max(stt_cfg.MAX_CHUNK_MS, 4500)
         effective_trailing_ms = max(stt_cfg.TRAILING_SILENCE_MS, int(os.getenv("STT_EFFECTIVE_TRAILING_MS", "600")))
@@ -358,6 +537,55 @@ class RealEstateSTTProcessor(FrameProcessor):
             await self.push_frame(frame, direction)
             return
 
+        if not self.vad_enabled:
+            pcm16 = _ensure_pcm16(frame.audio, frame.sample_rate, stt_cfg.TARGET_SAMPLE_RATE)
+            if not pcm16: return
+
+            logger.info("[PIPELINE] STT -> Pre-segmented speech received, transcribing bytes=%d", len(pcm16))
+            try:
+                # 2. CIRCUIT BREAKER (STT Timeout)
+                async with _ml_semaphore:
+                    session_lang = "en"
+                    if self.turn_state and hasattr(self.turn_state, "session_language"):
+                        session_lang = self.turn_state.session_language
+
+                    text = await asyncio.wait_for(
+                        asyncio.get_running_loop().run_in_executor(
+                            _executor,
+                            lambda: transcribe_audio(pcm16, self.agent_id, language=session_lang),
+                        ),
+                        timeout=3.5
+                    )
+            except asyncio.TimeoutError:
+                logger.error("STT Timeout (Skipping chunk)")
+                return
+            except Exception:
+                return
+
+            normalized_text = _normalize_text(text)
+            if not normalized_text or len(normalized_text) < stt_cfg.MIN_TRANSCRIPT_CHARS or not _is_actionable_transcript(text):
+                logger.warning(
+                    "[PIPELINE] STT -> Dropped empty/non-actionable transcript bytes=%d text=%r",
+                    len(pcm16),
+                    text,
+                )
+                self._cooldown_until = time.monotonic() + 0.35
+                return
+
+            now = time.monotonic()
+            if _is_duplicate_text(text, self.last_emitted_text) and (now - self.last_emit_at) < stt_cfg.DUPLICATE_TEXT_WINDOW_S:
+                self._cooldown_until = now + 0.35
+                return
+
+            self.last_emitted_text = text
+            self.last_emit_at = now
+            self._cooldown_until = now + 0.20
+            logger.info("[PIPELINE] STT -> Emitting transcript: %s", text)
+            text_frame = TextFrame(text=text)
+            _ensure_frame_runtime_attrs(text_frame)
+            await self.push_frame(text_frame, direction)
+            return
+
         pcm16 = _ensure_pcm16(frame.audio, frame.sample_rate, stt_cfg.TARGET_SAMPLE_RATE)
         if not pcm16: return
 
@@ -366,6 +594,7 @@ class RealEstateSTTProcessor(FrameProcessor):
             self.audio_buffer.clear()
             self.is_speaking = False
             self._voice_hits = 0
+
             self._voiced_ms = 0.0
             self._barge_in_sent = False
             return
@@ -587,6 +816,14 @@ class RealEstateTTSProcessor(FrameProcessor):
                 return
 
         if not isinstance(frame, TextFrame):
+            if isinstance(frame, EndFrame):
+                # Wait for active synthesis to complete before ending the pipeline and closing the socket
+                if self._tts_task and not self._tts_task.done():
+                    try:
+                        logger.info("[PIPELINE] TTS -> Waiting for active synthesis to complete before sending EndFrame.")
+                        await self._tts_task
+                    except Exception as e:
+                        logger.warning("[PIPELINE] TTS -> Error waiting for active synthesis task: %s", e)
             await self.push_frame(frame, direction)
             return
 

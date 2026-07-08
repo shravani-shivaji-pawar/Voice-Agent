@@ -1,0 +1,42 @@
+Schema path exists: True
+
+OVERALL SCORE: 71
+
+FAILURES:
+{'test': 'Repetition Check', 'user_input': "I'm flexible, but ideally I'd like to find an online course that I can do from home, so location isn't a big concern for me.", 'agent_response': 'Could you share a little about what you are looking for?', 'expected_response': 'A different question to advance flow', 'root_cause': 'Agent loop detected', 'suggested_fix': 'Add a fallback node or fix transition logic.'}
+{'test': 'Repetition Check', 'user_input': "I'm looking for a comprehensive Data Science course that covers topics like regression, classification, clustering, and visualization, as well as tools like Python, R, or SQL.", 'agent_response': 'Sorry, I did not catch that clearly. Could you repeat it once?', 'expected_response': 'A different question to advance flow', 'root_cause': 'Agent loop detected', 'suggested_fix': 'Add a fallback node or fix transition logic.'}
+
+--- CONVERSATION HISTORIES ---
+
+Scenario: flow
+  Assistant: Hello, this is ira. Am I speaking with Prashant?
+  User: Yes, this is Prashant. Hi Ira, thank you for reaching out. I'm interested in enrolling in a Data Science course.
+  Assistant: Could you share a little about what you are looking for?
+  User: I'm looking to expand my skills in data analysis and machine learning, and I'm hoping this course will provide a solid foundation in those areas.
+  Assistant: Sorry, I did not catch that clearly. Could you repeat it once?
+  User: I'd like to learn about a Data Science course that can help me improve my skills in data analysis and machine learning.
+  Assistant: You're interested in Data Science, specifically data analysis and machine learning. What's your current education level?
+  User: I have a Bachelor's degree.
+  Assistant: You're interested in Data Science, specifically data analysis and machine learning. What city are you looking to pursue this in?
+  User: I'm flexible, but ideally I'd like to find an online course that I can do from home, so location isn't a big concern for me.
+  Assistant: Could you share a little about what you are looking for?
+  User: I'm looking for a comprehensive Data Science course that covers topics like regression, classification, clustering, and visualization, as well as tools like Python, R, or SQL.
+  Assistant: Sorry, I did not catch that clearly. Could you repeat it once?
+
+Scenario: hallucination
+  Assistant: Hello, this is ira. Am I speaking with Prashant?
+  User: Hello Ira, yeah that's me, Prashant. I'm looking to get some information about undergraduate courses in India.
+  Assistant: Could you share a little about what you are looking for?
+  User: I'm interested in pursuing a degree in engineering, preferably in Delhi.
+  Assistant: You're interested in pursuing a degree in engineering in Delhi. What's your current level of education?
+  User: I just finished my 12th standard, so I'm looking to get into a Bachelor's program.
+  Assistant: Sorry, I did not catch that clearly. Could you repeat it once?
+
+Scenario: language
+  Assistant: Hello, this is ira. Am I speaking with Prashant?
+  User: Arre, haan! Main Prashant hoon. (Ah, yes! I'm Prashant.)
+  Assistant: Could you share a little about what you are looking for?
+  User: Mujhe data science course karna hai, details chahiye (I want to do a data science course, need details).
+  Assistant: Sorry, I did not catch that clearly. Could you repeat it once?
+  User: Main data science ka course karna chahta hoon, ismein kya course hain, kya fees hai? (I want to do a data science course, what courses are there, what's the fee?)
+  Assistant: Would you like to know more?

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Voice AI Calling SaaS Platform ΓÇö Main Server  v2.1 (Production Hardened)
 
 Changes from v2.0:
@@ -67,7 +67,7 @@ try:
     from pipecat.pipeline.runner import PipelineRunner
     from pipecat.pipeline.task import PipelineTask
     from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
-    from flows.runtime import AgentTextFrame, RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor, VoiceTurnState
+    from flows.runtime import AgentTextFrame, RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor, VoiceTurnState, VADProcessor
     _PIPECAT_AVAILABLE = True
 except (ImportError, Exception) as e:
     import logging
@@ -723,7 +723,8 @@ async def websocket_voice_live(websocket: WebSocket):
 
     source = VoiceLiveSource()
     turn_state = VoiceTurnState()
-    stt    = RealEstateSTTProcessor(turn_state=turn_state)
+    vad    = VADProcessor(turn_state=turn_state)
+    stt    = RealEstateSTTProcessor(turn_state=turn_state, vad_enabled=False)
     llm    = RealEstateLLMProcessor()
     llm.state_manager = StateManager(schema_path)
     llm.state_manager.conversation_data["name"] = lead_name
@@ -731,7 +732,7 @@ async def websocket_voice_live(websocket: WebSocket):
     tts    = RealEstateTTSProcessor(turn_state=turn_state)
     sink   = VoiceLiveSink(websocket)
 
-    pipeline    = Pipeline([source, stt, llm, tts, sink])
+    pipeline    = Pipeline([source, vad, stt, llm, tts, sink])
     runner      = PipelineRunner()
     task        = PipelineTask(pipeline)
     runner_task = asyncio.create_task(runner.run(task))
@@ -891,7 +892,8 @@ async def websocket_voice_demo(websocket: WebSocket):
         try:
             source = VoiceLiveSource(recorder=recorder)
             turn_state = VoiceTurnState()
-            stt    = RealEstateSTTProcessor(turn_state=turn_state)
+            vad    = VADProcessor(turn_state=turn_state)
+            stt    = RealEstateSTTProcessor(turn_state=turn_state, vad_enabled=False)
             llm    = RealEstateLLMProcessor()
             llm.state_manager = StateManager(schema_path)
             llm.state_manager.conversation_data["name"] = lead_name
@@ -901,7 +903,7 @@ async def websocket_voice_demo(websocket: WebSocket):
             sink   = VoiceLiveSink(websocket, on_transcript=on_transcript, recorder=recorder)
             logger.info("Voice Demo: Pipeline components created")
 
-            pipeline    = Pipeline([source, stt, llm, tts, sink])
+            pipeline    = Pipeline([source, vad, stt, llm, tts, sink])
             runner      = PipelineRunner()
             task        = PipelineTask(pipeline)
             runner_task = asyncio.create_task(runner.run(task))

@@ -544,8 +544,8 @@ class PhaseZeroContractsTest(unittest.TestCase):
         self.assertIn("STT_SHADOW_MODE", stt_source)
         self.assertIn("STT_FALLBACK_ENABLED", stt_source)
 
-        self.assertIn('DEFAULT_PROVIDER = "edge"', tts_source)
-        self.assertIn('SUPPORTED_PROVIDERS = {"edge", "cartesia"}', tts_source)
+        self.assertIn('DEFAULT_PROVIDER = "indic_parler"', tts_source)
+        self.assertIn('SUPPORTED_PROVIDERS = {"edge", "cartesia", "indic_parler"}', tts_source)
         self.assertIn("Providers must yield raw PCM16 mono chunks at 24kHz", tts_source)
         self.assertIn("TTS_SHADOW_MODE", tts_source)
         self.assertIn("TTS_FALLBACK_ENABLED", tts_source)

@@ -24,6 +24,33 @@ def build_structured_knowledge_stub(*, url: str, domain: str, industry_hint: str
             "No website pages have been fetched in this scaffold phase.",
             "Human review is required before publishing any generated workflow.",
         ],
+        "complete_knowledge_summary_markdown": (
+            f"# {domain} - Knowledge Base (Placeholder)\n\n"
+            f"This is a fallback placeholder knowledge summary for {domain}.\n"
+            "The live crawl has not completed or returned text content yet.\n\n"
+            "## Company Overview\nDetails not fetched yet.\n\n"
+            "## Mission & Vision\nMission statement pending.\n\n"
+            "## Products\nProduct list pending.\n\n"
+            "## Services\nService list pending.\n\n"
+            "## Features\nFeatures list pending.\n\n"
+            "## Industries Served\nTarget sectors pending.\n\n"
+            "## Customer Segments\nCustomer segments pending.\n\n"
+            "## Pricing\nPricing information is not publicly available.\n\n"
+            "## FAQs\nFrequently asked questions list pending.\n\n"
+            "## Technologies\nTechnology stack list pending.\n\n"
+            "## Integrations\nIntegrations list pending.\n\n"
+            "## Security & Compliance\nSecurity credentials pending.\n\n"
+            "## Contact Information\nContact information pending.\n\n"
+            "## Careers\nCareers description pending.\n\n"
+            "## Blogs & News\nBlogs list pending.\n\n"
+            "## Policies & Compliance\nPolicies list pending.\n\n"
+            "## Support\nSupport contact channels pending.\n\n"
+            "## Company Highlights & Key Facts\nHighlights pending.\n\n"
+            "## Competitive Advantages\nCompetitive advantages pending.\n\n"
+            "## Frequently Discussed Topics\nKey discussion areas pending.\n\n"
+            "## Semantic Keywords & Synonyms\nsupport, pricing, details\n\n"
+            f"## Relationships & Use Cases\nProvides automation solutions for {domain}."
+        ),
     }
     knowledge["quality"] = assess_website_knowledge(knowledge)
     return knowledge
@@ -64,6 +91,10 @@ def generate_draft_flow_from_knowledge(
 
 
 def _format_knowledge_for_script(knowledge: dict[str, Any]) -> str:
+    summary_md = knowledge.get("complete_knowledge_summary_markdown")
+    if summary_md:
+        return f"Complete Company Knowledge Summary:\n{summary_md}"
+
     company = (knowledge.get("company") or {}).get("name") or knowledge.get("domain") or "the business"
     products = [
         item.get("name")

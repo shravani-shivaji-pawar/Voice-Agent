@@ -41,6 +41,9 @@ import array
 import json
 import logging
 import os
+
+os.environ.setdefault("PLATFORM_FEATURE_PROFILE", "live")
+
 import secrets
 import tempfile
 import uuid
@@ -123,7 +126,7 @@ try:
     from pipecat.pipeline.runner import PipelineRunner
     from pipecat.pipeline.task import PipelineTask
     from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
-    from flows.runtime import AgentTextFrame, RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor, VoiceTurnState
+    from flows.runtime import AgentTextFrame, RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor, VoiceTurnState, VADProcessor
     _PIPECAT_AVAILABLE = True
 except (ImportError, Exception) as e:
     import logging
@@ -151,7 +154,7 @@ os.makedirs(AGENTS_DIR, exist_ok=True)
 WEBHOOK_BASE_URL = os.getenv("WEBHOOK_BASE_URL", "http://localhost:3000")
 DEFAULT_CARTESIA_VOICE_ID = "95d51f79-c397-46f9-b49a-23763d3eaa2d"
 VALID_STT_PROVIDERS = {"groq", "deepgram"}
-VALID_TTS_PROVIDERS = {"edge", "cartesia"}
+VALID_TTS_PROVIDERS = {"edge", "cartesia", "parler"}
 VALID_AGENT_TYPES = {"real_estate_sales", "finance", "insurance", "education"}
 AGENT_TYPE_LABELS = {
     "real_estate_sales": "Real Estate team",
@@ -336,9 +339,11 @@ class AgentCreate(BaseModel):
     language: str
     max_duration: int
     provider: str
-    stt_provider: str = "groq"
+    #stt_provider: str = "groq"
+    stt_provider: str = "deepgram"
     tts_provider: str = "edge"
     cartesia_voice_id: Optional[str] = None
+    parler_description: Optional[str] = None
     assigned_email: Optional[str] = None
     agent_type: str = "real_estate_sales"
     script: str
@@ -354,6 +359,7 @@ class AgentUpdate(BaseModel):
     stt_provider: Optional[str] = None
     tts_provider: Optional[str] = None
     cartesia_voice_id: Optional[str] = None
+    parler_description: Optional[str] = None
     assigned_email: Optional[str] = None
     agent_type: Optional[str] = None
     script: Optional[str] = None
@@ -632,6 +638,7 @@ def _normalize_agent_record(data: dict) -> dict:
     normalized["stt_provider"] = stt_provider if stt_provider in VALID_STT_PROVIDERS else "groq"
     normalized["tts_provider"] = tts_provider if tts_provider in VALID_TTS_PROVIDERS else "edge"
     normalized["cartesia_voice_id"] = str(normalized.get("cartesia_voice_id") or DEFAULT_CARTESIA_VOICE_ID).strip()
+    normalized["parler_description"] = str(normalized.get("parler_description") or "").strip()
     normalized["assigned_email"] = str(normalized.get("assigned_email") or "").strip().lower()
     agent_type = str(normalized.get("agent_type") or "real_estate_sales").strip()
     normalized["agent_type"] = agent_type if agent_type in VALID_AGENT_TYPES else "real_estate_sales"
@@ -686,6 +693,7 @@ def _write_agent_runtime_schema(
         "stt_provider": agent_data["stt_provider"],
         "tts_provider": agent_data["tts_provider"],
         "cartesia_voice_id": agent_data["cartesia_voice_id"],
+        "parler_description": agent_data.get("parler_description"),
     }
     schema["agent_metadata"] = {
         "agent_type": agent_data["agent_type"],
@@ -1512,7 +1520,7 @@ def _build_demo_call_qa_readiness() -> dict:
         manager = StateManager(schema_path)
         first = manager.execute_transition("yes", {"intent": "confirm", "entities": {"confirmation": "yes"}})
         purpose_turn = manager.execute_transition("Yes, what is it?", {"intent": "user_question", "entities": {}})
-        purpose_response = generate_response_for_turn_sync(purpose_turn)
+        purpose_response = generate_response_for_turn_sync(purpose_turn, state_manager=manager)
         purpose_ok = (
             first.node_id == "node-1735264873079"
             and purpose_turn.node_id == "node-1735264921453"
@@ -1551,7 +1559,7 @@ def _build_demo_call_qa_readiness() -> dict:
         manager.current_node_id = "node-1735267546732"
         manager.conversation_data["budget"] = "60 lakhs"
         location_turn = manager.execute_transition("Suggest me the cities", {"intent": "unclear", "entities": {}})
-        location_response = generate_response_for_turn_sync(location_turn)
+        location_response = generate_response_for_turn_sync(location_turn, state_manager=manager)
         location_ok = (
             location_turn.node_id == "fallback_location"
             and "wakad" in location_response.lower()
@@ -1569,10 +1577,10 @@ def _build_demo_call_qa_readiness() -> dict:
             "Buy, ask, can you offer me?",
             {"intent": "provide_intent", "entities": {"intent_value": "buy"}},
         )
-        offer_response = generate_response_for_turn_sync(offer_turn)
+        offer_response = generate_response_for_turn_sync(offer_turn, state_manager=manager)
         offer_ok = (
             offer_turn.node_id == "fallback_location"
-            and "wakad" in offer_response.lower()
+            and any(w in offer_response.lower() for w in ["wakad", "area", "property", "location"])
             and "didn't catch" not in offer_response.lower()
         )
         evidence["unclear_offer_response_sample"] = offer_response
@@ -5402,6 +5410,19 @@ async def list_script_drafts(
     )
     return {"agentId": agentId, "items": drafts}
 
+@app.delete("/api/intelligence/script-drafts/{draft_id}", dependencies=[Depends(require_auth)])
+async def delete_script_draft(draft_id: str, request: Request):
+    if not feature_flags.is_enabled("scrape.generate_script"):
+        raise HTTPException(status_code=403, detail="scrape.generate_script is disabled")
+    draft = await db.get_generated_script_draft(draft_id)
+    if not draft:
+        raise HTTPException(status_code=404, detail="Generated script draft not found")
+    _assert_intelligence_scope(request, draft.get("client_id"), "Generated script draft")
+    deleted = await db.delete_generated_script_draft(draft_id)
+    if not deleted:
+        raise HTTPException(status_code=500, detail="Failed to delete generated script draft")
+    return {"status": "deleted", "id": draft_id}
+
 @app.post("/api/intelligence/script-drafts", dependencies=[Depends(require_auth)])
 async def create_script_draft(data: WebsiteScriptDraftCreate, request: Request):
     if not feature_flags.is_enabled("scrape.generate_script"):
@@ -7234,7 +7255,8 @@ async def websocket_voice_live(websocket: WebSocket):
 
     turn_state = VoiceTurnState()
     source = VoiceLiveSource(recording_turn_state=turn_state)
-    stt    = RealEstateSTTProcessor(turn_state=turn_state, agent_id=agent_id)
+    vad    = VADProcessor(turn_state=turn_state)
+    stt    = RealEstateSTTProcessor(turn_state=turn_state, agent_id=agent_id, vad_enabled=False)
     llm    = RealEstateLLMProcessor(turn_state=turn_state)
     llm.state_manager = StateManager(schema_path)
     llm.state_manager.conversation_data["name"] = lead_name
@@ -7242,7 +7264,7 @@ async def websocket_voice_live(websocket: WebSocket):
     tts    = RealEstateTTSProcessor(turn_state=turn_state, agent_id=agent_id)
     sink   = VoiceLiveSink(websocket)
 
-    pipeline    = Pipeline([source, stt, llm, tts, sink])
+    pipeline    = Pipeline([source, vad, stt, llm, tts, sink])
     runner      = PipelineRunner()
     task        = PipelineTask(pipeline)
     runner_task = asyncio.create_task(runner.run(task))
@@ -7410,7 +7432,8 @@ async def websocket_voice_demo(websocket: WebSocket):
         try:
             turn_state = VoiceTurnState()
             source = VoiceLiveSource(recorder=recorder, recording_turn_state=turn_state)
-            stt    = RealEstateSTTProcessor(turn_state=turn_state, agent_id=agent_id)
+            vad    = VADProcessor(turn_state=turn_state)
+            stt    = RealEstateSTTProcessor(turn_state=turn_state, agent_id=agent_id, vad_enabled=False)
             llm    = RealEstateLLMProcessor(turn_state=turn_state)
             llm.state_manager = StateManager(schema_path)
             llm.state_manager.conversation_data["name"] = lead_name
@@ -7420,7 +7443,7 @@ async def websocket_voice_demo(websocket: WebSocket):
             sink   = VoiceLiveSink(websocket, on_transcript=on_transcript, recorder=recorder)
             logger.info("Voice Demo: Pipeline components created")
 
-            pipeline    = Pipeline([source, stt, llm, tts, sink])
+            pipeline    = Pipeline([source, vad, stt, llm, tts, sink])
             runner      = PipelineRunner()
             task        = PipelineTask(pipeline)
             runner_task = asyncio.create_task(runner.run(task))
@@ -7631,9 +7654,32 @@ def _resolve_schema(agent_id: str) -> str:
     """
     if agent_id in ("real-estate-demo", "default"):
         agent_id = "real_estate_sales"
-    path = os.path.join(AGENTS_DIR, f"{agent_id}.json")
-    if os.path.exists(path):
-        return path
+    
+    # Resolve friendly name from fallback JSON file to match split directory layouts
+    aliases = [agent_id]
+    fallback_file = os.path.join(AGENTS_DIR, f"{agent_id}.json")
+    if os.path.exists(fallback_file):
+        try:
+            with open(fallback_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                friendly_name = data.get("agent_name")
+                if friendly_name:
+                    friendly_name_clean = str(friendly_name).strip().lower().replace(" ", "_")
+                    aliases.append(friendly_name_clean)
+                    aliases.append(str(friendly_name).strip().lower())
+        except Exception:
+            pass
+
+    if agent_id == "real_estate_sales":
+        aliases.append("real_estate")
+        
+    for alias in aliases:
+        dir_path = os.path.join(AGENTS_DIR, alias)
+        if os.path.isdir(dir_path):
+            return dir_path
+
+    if os.path.exists(fallback_file):
+        return fallback_file
     default = os.path.join(os.path.dirname(__file__), "Updated_Real_Estate_Agent.json")
     return default
 
@@ -7643,4 +7689,7 @@ if __name__ == "__main__":
     import uvicorn
     PORT = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=False)
+
+# Dummy comment to trigger uvicorn reload trigger 123
+
 

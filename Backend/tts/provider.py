@@ -18,8 +18,9 @@ import urllib.request
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_PROVIDER = "edge"
-SUPPORTED_PROVIDERS = {"edge", "cartesia"}
+DEFAULT_PROVIDER = "indic_parler"
+# ── NEW: indic_parler added to supported providers ─────────────────────────
+SUPPORTED_PROVIDERS = {"edge", "cartesia", "indic_parler"}
 _AGENT_CONFIG_CACHE: dict[str, tuple[float, dict]] = {}
 
 
@@ -32,6 +33,8 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 def _normalize_provider(provider: str | None) -> str:
     normalized = (provider or DEFAULT_PROVIDER).strip().lower()
+    if normalized == "parler":
+        normalized = "indic_parler"
     if normalized not in SUPPORTED_PROVIDERS:
         logger.warning("Unknown TTS_PROVIDER=%s; falling back to %s", provider, DEFAULT_PROVIDER)
         return DEFAULT_PROVIDER
@@ -48,6 +51,7 @@ def _configured_provider(agent_id: str = "default") -> str:
     if schema_provider:
         return schema_provider
 
+    # Legacy env-var override for Cartesia
     cartesia_agent_ids = {
         item.strip()
         for item in os.getenv("CARTESIA_AGENT_IDS", "").split(",")
@@ -55,6 +59,16 @@ def _configured_provider(agent_id: str = "default") -> str:
     }
     if agent_id and agent_id in cartesia_agent_ids:
         return "cartesia"
+
+    # NEW: env-var override for Indic Parler
+    indic_parler_agent_ids = {
+        item.strip()
+        for item in os.getenv("INDIC_PARLER_AGENT_IDS", "").split(",")
+        if item.strip()
+    }
+    if agent_id and agent_id in indic_parler_agent_ids:
+        return "indic_parler"
+
     return global_provider
 
 
@@ -62,15 +76,14 @@ def _provider_config_from_agent_schema(agent_id: str) -> dict:
     if not agent_id or agent_id == "default":
         return {}
 
-    # Check cache (expire after 30s)
+    # Check cache (expire after 30 s)
     cached = _AGENT_CONFIG_CACHE.get(agent_id)
     if cached and (time.time() - cached[0]) < 30.0:
         return cached[1]
 
     config = {}
     try:
-        port = os.getenv("PORT", "8000")
-        url = os.getenv("BACKEND_API_URL", f"http://127.0.0.1:{port}") + f"/api/agents/{agent_id}"
+        url = os.getenv("BACKEND_API_URL", "http://127.0.0.1:8000") + f"/api/agents/{agent_id}"
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req, timeout=2.0) as response:
             if response.status == 200:
@@ -82,6 +95,15 @@ def _provider_config_from_agent_schema(agent_id: str) -> dict:
                 cartesia_voice_id = provider_config.get("cartesia_voice_id") or schema.get("cartesia_voice_id")
                 if cartesia_voice_id:
                     config["cartesia_voice_id"] = str(cartesia_voice_id).strip()
+                # NEW: indic_parler voice description override
+                indic_voice_desc = (
+                    provider_config.get("parler_description")
+                    or schema.get("parler_description")
+                    or provider_config.get("indic_parler_voice_description")
+                    or schema.get("indic_parler_voice_description")
+                )
+                if indic_voice_desc:
+                    config["indic_parler_voice_description"] = indic_voice_desc
             else:
                 raise RuntimeError(f"Backend API returned status {response.status}")
     except urllib.error.HTTPError as exc:
@@ -110,16 +132,22 @@ def _shadow_provider(primary_provider: str) -> str:
     configured = os.getenv("TTS_SHADOW_PROVIDER")
     if configured:
         return _normalize_provider(configured)
-    return "cartesia" if primary_provider == "edge" else "edge"
+    # Default shadow: if primary is edge → shadow with cartesia; otherwise → edge
+    if primary_provider == "edge":
+        return "cartesia"
+    if primary_provider == "indic_parler":
+        return "edge"
+    return "edge"
 
 
 def _load_provider(provider: str):
     if provider == "cartesia":
         from .tts_cartesia import generate_speech_stream as _cartesia
-
         return _cartesia
+    if provider == "indic_parler":
+        from .tts_indic_parler import generate_speech_stream as _indic_parler
+        return _indic_parler
     from .tts_edge import generate_speech_stream as _edge
-
     return _edge
 
 
@@ -155,9 +183,13 @@ def _stream_provider(
     text: str,
     preferred_language: str | None,
     cartesia_voice_id: str | None = None,
+    indic_parler_voice_description: str | None = None,
 ):
     if provider == "cartesia":
         return _load_provider(provider)(text, preferred_language, voice_id=cartesia_voice_id)
+    if provider == "indic_parler":
+        return _load_provider(provider)(text, preferred_language, description=indic_parler_voice_description)
+    # edge and indic_parler share the same (text, preferred_language) signature
     return _load_provider(provider)(text, preferred_language)
 
 
@@ -169,6 +201,7 @@ def generate_speech_stream(
     """Yield live TTS audio from the selected provider."""
     primary_provider = _configured_provider(agent_id)
     cartesia_voice_id = _cartesia_voice_id_for_agent(agent_id)
+    indic_voice_desc = _provider_config_from_agent_schema(agent_id).get("indic_parler_voice_description")
 
     if _env_bool("TTS_SHADOW_MODE", False):
         shadow = _shadow_provider(primary_provider)
@@ -181,7 +214,13 @@ def generate_speech_stream(
 
     nonempty_yielded = False
     try:
-        for chunk in _stream_provider(primary_provider, text, preferred_language, cartesia_voice_id):
+        for chunk in _stream_provider(
+            primary_provider,
+            text,
+            preferred_language,
+            cartesia_voice_id=cartesia_voice_id,
+            indic_parler_voice_description=indic_voice_desc
+        ):
             if chunk:
                 nonempty_yielded = True
             yield chunk
@@ -201,7 +240,13 @@ def generate_speech_stream(
             DEFAULT_PROVIDER,
         )
         try:
-            for chunk in _stream_provider(DEFAULT_PROVIDER, text, preferred_language, cartesia_voice_id):
+            for chunk in _stream_provider(
+                DEFAULT_PROVIDER,
+                text,
+                preferred_language,
+                cartesia_voice_id=cartesia_voice_id,
+                indic_parler_voice_description=indic_voice_desc
+            ):
                 yield chunk
         except Exception as fallback_exc:
             logger.exception("[TTS PROVIDER] fallback=%s failed: %s", DEFAULT_PROVIDER, fallback_exc)

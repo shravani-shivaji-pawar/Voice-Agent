@@ -23,7 +23,7 @@ logger = logging.getLogger("intelligence.pipeline")
 @dataclass(frozen=True)
 class ScrapeLimits:
     max_pages: int = 20
-    max_bytes: int = 2_000_000
+    max_bytes: int = 10_000_000
     timeout_s: int = 30
 
 
@@ -81,51 +81,57 @@ class WebsiteIntelligencePipeline:
         job = await self.db.get_scrape_job(job_id)
         if not job:
             raise ValueError(f"scrape job not found: {job_id}")
-        knowledge = None
-        if use_live_extraction:
-            latest = await self.db.get_latest_scrape_extraction(job_id)
-            knowledge = latest["extraction"] if latest else None
-            if not knowledge:
-                run_result = await self.run_job(job_id=job_id, industry_hint=industry_hint or agent.get("agent_type"))
-                knowledge = run_result.get("knowledge")
+        
+        await self.db.update_scrape_job_progress(job_id, "Creating Agent Knowledge Base")
+        
+        try:
+            knowledge = None
+            if use_live_extraction:
+                latest = await self.db.get_latest_scrape_extraction(job_id)
+                knowledge = latest["extraction"] if latest else None
                 if not knowledge:
-                    status = run_result.get("status") or job.get("status") or "unknown"
-                    if status in {"already_running", "running", "dispatching"}:
-                        raise CrawlError("Scrape job is still running. Please wait for completion before creating a draft.")
-                    raise CrawlError(f"Scrape extraction is not ready yet. Current status: {status}.")
-        if not knowledge:
-            safe = SafeURL(
-                url=job["url"],
-                normalized_url=job["url"],
-                domain=job["domain"],
-                scheme=job["url"].split(":", 1)[0],
+                    run_result = await self.run_job(job_id=job_id, industry_hint=industry_hint or agent.get("agent_type"))
+                    knowledge = run_result.get("knowledge")
+                    if not knowledge:
+                        status = run_result.get("status") or job.get("status") or "unknown"
+                        if status in {"already_running", "running", "dispatching"}:
+                            raise CrawlError("Scrape job is still running. Please wait for completion before creating a draft.")
+                        raise CrawlError(f"Scrape extraction is not ready yet. Current status: {status}.")
+            if not knowledge:
+                safe = SafeURL(
+                    url=job["url"],
+                    normalized_url=job["url"],
+                    domain=job["domain"],
+                    scheme=job["url"].split(":", 1)[0],
+                )
+                knowledge = build_structured_knowledge_stub(
+                    url=safe.normalized_url,
+                    domain=safe.domain,
+                    industry_hint=industry_hint or agent.get("agent_type"),
+                )
+                await self.db.save_scrape_extraction(job_id, knowledge)
+            if "quality" not in knowledge:
+                knowledge["quality"] = assess_website_knowledge(knowledge)
+            flow = generate_draft_flow_from_knowledge(
+                agent_id=agent["id"],
+                agent_name=agent.get("name") or "Voice Agent",
+                agent_type=agent.get("agent_type") or "real_estate_sales",
+                script=agent.get("script") or "",
+                data_fields=agent.get("data_fields") or [],
+                knowledge=knowledge,
             )
-            knowledge = build_structured_knowledge_stub(
-                url=safe.normalized_url,
-                domain=safe.domain,
-                industry_hint=industry_hint or agent.get("agent_type"),
+            draft = await self.db.create_generated_script_draft(
+                job_id=job_id,
+                client_id=job.get("client_id"),
+                agent_id=agent["id"],
+                status="draft",
+                draft_json=flow,
+                knowledge_json=knowledge,
             )
-            await self.db.save_scrape_extraction(job_id, knowledge)
-        if "quality" not in knowledge:
-            knowledge["quality"] = assess_website_knowledge(knowledge)
-        flow = generate_draft_flow_from_knowledge(
-            agent_id=agent["id"],
-            agent_name=agent.get("name") or "Voice Agent",
-            agent_type=agent.get("agent_type") or "real_estate_sales",
-            script=agent.get("script") or "",
-            data_fields=agent.get("data_fields") or [],
-            knowledge=knowledge,
-        )
-        draft = await self.db.create_generated_script_draft(
-            job_id=job_id,
-            client_id=job.get("client_id"),
-            agent_id=agent["id"],
-            status="draft",
-            draft_json=flow,
-            knowledge_json=knowledge,
-        )
-        await self.db.update_scrape_job_status(job_id, "draft_ready")
-        return draft
+            await self.db.update_scrape_job_status(job_id, "draft_ready")
+            return draft
+        finally:
+            await self.db.update_scrape_job_progress(job_id, None)
 
     async def run_job(self, *, job_id: str, industry_hint: str | None = None) -> dict:
         job = await self.db.get_scrape_job(job_id)
@@ -134,7 +140,14 @@ class WebsiteIntelligencePipeline:
         if job.get("status") == "cancelled":
             return {"job_id": job_id, "status": "cancelled", "cancelled": True}
         if job.get("status") in {"completed", "draft_ready"}:
-            return {"job_id": job_id, "status": job.get("status"), "skipped": True}
+            extraction = await self.db.get_latest_scrape_extraction(job_id)
+            if extraction and extraction.get("extraction"):
+                return {
+                    "job_id": job_id,
+                    "status": job.get("status"),
+                    "skipped": True,
+                    "knowledge": extraction["extraction"],
+                }
         limits = job.get("limits") or {}
         started_job = await self.db.mark_scrape_job_running(job_id)
         if started_job and started_job.get("status") == "cancelled":
@@ -150,6 +163,10 @@ class WebsiteIntelligencePipeline:
             }
 
         try:
+            await self.db.update_scrape_job_progress(job_id, "Validating URL")
+            validate_public_http_url(job["url"], resolve_dns=False)
+
+            await self.db.update_scrape_job_progress(job_id, "Crawling Website")
             pages = await self.crawler.crawl(
                 job["url"],
                 max_pages=int(limits.get("max_pages") or ScrapeLimits.max_pages),
@@ -158,6 +175,8 @@ class WebsiteIntelligencePipeline:
             )
             if await self._is_cancelled(job_id):
                 return {"job_id": job_id, "status": "cancelled", "cancelled": True}
+            
+            await self.db.update_scrape_job_progress(job_id, "Extracting Content")
             for page in pages:
                 if await self._is_cancelled(job_id):
                     return {"job_id": job_id, "status": "cancelled", "cancelled": True}
@@ -170,17 +189,22 @@ class WebsiteIntelligencePipeline:
                 )
             if await self._is_cancelled(job_id):
                 return {"job_id": job_id, "status": "cancelled", "cancelled": True}
-            knowledge = extract_website_knowledge(
+            
+            knowledge = await extract_website_knowledge(
                 pages,
                 source_url=job["url"],
                 domain=job["domain"],
                 industry_hint=industry_hint,
+                job_id=job_id,
+                db=self.db,
             )
             if await self._is_cancelled(job_id):
                 return {"job_id": job_id, "status": "cancelled", "cancelled": True}
             extraction = await self.db.save_scrape_extraction(job_id, knowledge)
             if await self._is_cancelled(job_id):
                 return {"job_id": job_id, "status": "cancelled", "cancelled": True}
+            
+            await self.db.update_scrape_job_progress(job_id, None)
             await self.db.update_scrape_job_status(job_id, "completed")
             return {
                 "job_id": job_id,
@@ -190,14 +214,16 @@ class WebsiteIntelligencePipeline:
                 "knowledge": knowledge,
             }
         except CrawlError as exc:
+            await self.db.update_scrape_job_progress(job_id, None)
             if await self._is_cancelled(job_id):
                 return {"job_id": job_id, "status": "cancelled", "cancelled": True}
             await self.db.update_scrape_job_status(job_id, "failed", error=str(exc))
             raise
         except Exception as exc:
+            await self.db.update_scrape_job_progress(job_id, None)
             if await self._is_cancelled(job_id):
                 return {"job_id": job_id, "status": "cancelled", "cancelled": True}
-            await self.db.update_scrape_job_status(job_id, "failed", error=type(exc).__name__)
+            await self.db.update_scrape_job_status(job_id, "failed", error=str(exc))
             raise
 
     async def _is_cancelled(self, job_id: str) -> bool:

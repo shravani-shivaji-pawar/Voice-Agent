@@ -19,7 +19,7 @@ from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
 from pipecat.transports.local.audio import LocalAudioTransport, LocalAudioTransportParams
 
-from flows.runtime import RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor
+from flows.runtime import RealEstateSTTProcessor, RealEstateLLMProcessor, RealEstateTTSProcessor, VADProcessor
 from tts import check_voice_assets, generate_speech
 
 logging.basicConfig(level=logging.INFO)
@@ -82,19 +82,20 @@ async def main():
 
     # 2. Initialize our Real Estate Processors
     print("⏳ Loading AI Engines...")
+    print("   - Initializing VAD...")
+    vad = VADProcessor()
     print("   - Initializing STT...")
-    stt = RealEstateSTTProcessor()
+    stt = RealEstateSTTProcessor(vad_enabled=False)
     print("   - Initializing LLM (Groq)...")
     llm = RealEstateLLMProcessor()
     print("   - Initializing TTS...")
     tts = RealEstateTTSProcessor()
     print("[SUCCESS] AI Engines Ready.")
 
-
-
     # 3. Build the Pipeline
     pipeline = Pipeline([
         transport.input(), # Mic Input
+        vad,
         stt,
         llm,
         tts,

@@ -85,7 +85,37 @@ class WebsiteIntelligenceTest(unittest.TestCase):
             "client_id": "client-1",
         }))
 
+        async def mock_create(*args, **kwargs):
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=json.dumps({
+                                "company_name": "Acme Realty",
+                                "industry": "real_estate",
+                                "products": [
+                                    {
+                                        "name": "Property Advisory Services",
+                                        "description": "Property comparison",
+                                        "pricing": None
+                                    }
+                                ],
+                                "faqs": [
+                                    {
+                                        "question": "Which city are you considering?",
+                                        "answer": "Mumbai or Pune"
+                                    }
+                                ]
+                            })
+                        )
+                    )
+                ]
+            )
+        self.completions_patcher = patch("groq.resources.chat.completions.AsyncCompletions.create", new=mock_create)
+        self.mock_completions = self.completions_patcher.start()
+
     def tearDown(self):
+        self.completions_patcher.stop()
         db_manager.DB_PATH = self._original_db_path
         self._tmp.cleanup()
 
@@ -172,7 +202,7 @@ class WebsiteIntelligenceTest(unittest.TestCase):
         self.assertEqual(preview["audit"]["website_intelligence"]["quality"]["level"], "insufficient")
         self.assertFalse(preview["audit"]["website_intelligence"]["auto_publish"])
         self.assertTrue(preview["audit"]["website_intelligence"]["review_checklist"][0]["passed"])
-        with patch.dict(os.environ, {"FEATURE_SCRAPE_REVIEW_GATE_SHADOW": "true"}, clear=False):
+        with patch.dict(os.environ, {"FEATURE_SCRAPE_REVIEW_GATE_SHADOW": "true", "FEATURE_FLOW_V2_LIVE": "false"}, clear=False):
             review_policy = _build_generated_script_review_policy(
                 fetched_draft,
                 prepared_flow,

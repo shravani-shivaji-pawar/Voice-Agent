@@ -528,6 +528,10 @@ def _init_schema() -> None:
         except sqlite3.OperationalError:
             pass
         try:
+            conn.execute("ALTER TABLE agents ADD COLUMN parler_description TEXT")
+        except sqlite3.OperationalError:
+            pass
+        try:
             conn.execute("ALTER TABLE agents ADD COLUMN assigned_email TEXT")
         except sqlite3.OperationalError:
             pass
@@ -566,6 +570,10 @@ def _init_schema() -> None:
                 conn.execute(column_sql)
             except sqlite3.OperationalError:
                 pass
+        try:
+            conn.execute("ALTER TABLE website_scrape_jobs ADD COLUMN progress TEXT")
+        except sqlite3.OperationalError:
+            pass
         _ensure_tenant_indexes(conn)
         _backfill_client_ids(conn)
         conn.commit()
@@ -1324,14 +1332,14 @@ class DatabaseManager:
             conn = _get_connection()
             try:
                 conn.execute(
-                    """INSERT INTO agents (id, name, voice, language, max_duration, provider, stt_provider, tts_provider, cartesia_voice_id, assigned_email, agent_type, script, data_fields, schema_path, client_id, certification_status, qa_score, last_qa_report, created_at)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    """INSERT INTO agents (id, name, voice, language, max_duration, provider, stt_provider, tts_provider, cartesia_voice_id, parler_description, assigned_email, agent_type, script, data_fields, schema_path, client_id, certification_status, qa_score, last_qa_report, created_at)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         agent_id, data.get("name"), data.get("voice"),
                         data.get("language", "en"), data.get("max_duration", 300),
                         data.get("provider"), data.get("stt_provider", "groq"),
                         data.get("tts_provider", "edge"), data.get("cartesia_voice_id"),
-                        data.get("assigned_email"),
+                        data.get("parler_description"), data.get("assigned_email"),
                         data.get("agent_type", "real_estate_sales"), data.get("script"),
                         json.dumps(data.get("data_fields", [])),
                         data.get("schema_path"), data.get("client_id"),
@@ -1372,8 +1380,8 @@ class DatabaseManager:
                     """UPDATE agents
                        SET name=?, voice=?, language=?, max_duration=?, provider=?,
                            stt_provider=?, tts_provider=?, cartesia_voice_id=?,
-                           assigned_email=?, agent_type=?, script=?, data_fields=?,
-                           schema_path=?, client_id=?, certification_status=?,
+                           parler_description=?, assigned_email=?, agent_type=?, script=?,
+                           data_fields=?, schema_path=?, client_id=?, certification_status=?,
                            qa_score=?, last_qa_report=?
                        WHERE id=?""",
                     (
@@ -1385,6 +1393,7 @@ class DatabaseManager:
                         data.get("stt_provider", "groq"),
                         data.get("tts_provider", "edge"),
                         data.get("cartesia_voice_id"),
+                        data.get("parler_description"),
                         data.get("assigned_email"),
                         data.get("agent_type", "real_estate_sales"),
                         data.get("script"),
@@ -2008,6 +2017,21 @@ class DatabaseManager:
                 conn.close()
         await run_in_executor(_sync)
 
+    async def update_scrape_job_progress(self, job_id: str, progress: Optional[str]) -> None:
+        def _sync():
+            conn = _get_connection()
+            try:
+                conn.execute(
+                    """UPDATE website_scrape_jobs
+                       SET progress=?, updated_at=?
+                       WHERE id=?""",
+                    (progress, datetime.now().isoformat(), job_id),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+        await run_in_executor(_sync)
+
     async def save_scrape_extraction(self, job_id: str, extraction: dict) -> dict:
         def _sync():
             conn = _get_connection()
@@ -2140,6 +2164,17 @@ class DatabaseManager:
             try:
                 row = conn.execute("SELECT * FROM generated_script_drafts WHERE id=?", (draft_id,)).fetchone()
                 return _decode_script_draft(dict(row)) if row else None
+            finally:
+                conn.close()
+        return await run_in_executor(_sync)
+
+    async def delete_generated_script_draft(self, draft_id: str) -> bool:
+        def _sync():
+            conn = _get_connection()
+            try:
+                cursor = conn.execute("DELETE FROM generated_script_drafts WHERE id=?", (draft_id,))
+                conn.commit()
+                return cursor.rowcount > 0
             finally:
                 conn.close()
         return await run_in_executor(_sync)

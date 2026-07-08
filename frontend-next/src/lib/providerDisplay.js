@@ -7,6 +7,7 @@ const STT_PROVIDER_LABELS = {
 const TTS_PROVIDER_LABELS = {
   edge: 'ElevenLabs Multilingual v2',
   cartesia: 'ElevenLabs Professional Voice',
+  parler: 'AI4Bharat Indic Parler TTS',
   default: 'ElevenLabs Multilingual v2',
 };
 

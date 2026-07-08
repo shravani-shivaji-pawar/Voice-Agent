@@ -62,6 +62,22 @@ LOCATION_NORMALIZATION = {
     "kharadi": "Kharadi",
     "karadi": "Kharadi",
     "kharad": "Kharadi",
+    # Gurgaon variants
+    "gurugram": "Gurgaon",
+    "gurgaon": "Gurgaon",
+    # Jaipur variants
+    "jaipur": "Jaipur",
+    "uj-ae pur": "Jaipur",
+    "ujae pur": "Jaipur",
+    "ujaepur": "Jaipur",
+    "udaypur": "Jaipur",
+    "udaipur": "Jaipur",
+    "ujae poor": "Jaipur",
+    # Zirakpur variants
+    "zirakpur": "Zirakpur",
+    # Mathura variants
+    "mathura": "Mathura",
+    "vrindavan": "Mathura",
 }
 HINDI_LOCATION_TRANSLITERATION = {
     "वाकड़": "Wakad",
@@ -76,8 +92,27 @@ HINDI_LOCATION_TRANSLITERATION = {
     "खराडी": "Kharadi",
     "खरादी": "Kharadi",
     "खारडी": "Kharadi",
+    # Gurgaon
+    "गुड़गांव": "Gurgaon",
+    "गुड़गांव": "Gurgaon",
+    "गुरुग्राम": "Gurgaon",
+    "गुड़गाँव": "Gurgaon",
+    # Jaipur
+    "जयपुर": "Jaipur",
+    "जयपूर": "Jaipur",
+    "उजए पूर": "Jaipur",
+    "उजएपुर": "Jaipur",
+    "उदयपुर": "Jaipur",
+    # Zirakpur
+    "जीरकपुर": "Zirakpur",
+    "झिरकपुर": "Zirakpur",
+    # Mathura
+    "मथुरा": "Mathura",
+    # Vrindavan
+    "वृंदावन": "Mathura",
+    "वृन्दावन": "Mathura",
 }
-VISIT_SCHEDULING_NODES = {"node-1736323961832", "node-1735265015507"}
+VISIT_SCHEDULING_NODES = {"node-1736323961832", "node-1735265015507", "node-visit"}
 CALLBACK_SCHEDULING_NODE_ID = "node-1736492391269"
 
 # ── Context-aware deny routing ────────────────────────────────────────────────
@@ -86,10 +121,10 @@ POLITE_END_NODE_ID = "node-1735969972303"       # End Conversation
 RESCHEDULE_VISIT_NODE_ID = "node_fallback_reschedule"
 
 # Node sets where each deny sub-type applies
-DENY_IDENTITY_NODES = {"node-1767592854176"}                        # Smart Greeting
-DENY_TIME_NODES = {"node-1735264873079", "node-1735970090937"}      # Availability Check, Re-engage
-DENY_INTEREST_NODES = {"node-1735264921453"}                        # Ask Intent
-DENY_VISIT_NODES = {"node-1736323961832", "node-1735265015507"}     # Share Property, Site Visit
+DENY_IDENTITY_NODES = {"node-1767592854176", "node-greeting"}                        # Smart Greeting
+DENY_TIME_NODES = {"node-1735264873079", "node-1735970090937", "node-availability"}      # Availability Check, Re-engage
+DENY_INTEREST_NODES = {"node-1735264921453", "node-explain"}                        # Ask Intent
+DENY_VISIT_NODES = {"node-1736323961832", "node-1735265015507", "node-visit"}     # Share Property, Site Visit
 
 ALL_DENY_INTENTS = {"deny", "deny_identity", "deny_interest", "deny_time", "deny_visit_time"}
 # Edges with these condition keywords auto-advance without user input
@@ -98,20 +133,32 @@ SKIP_EDGE_MARKERS = {"skip", "skip response"}
 # ── Node Classification Map (Fix #6: Avoid fragile string matching) ──────────
 NODE_GOALS = {
     "node-1767592854176": "greet_and_confirm_identity",
+    "node-greeting": "greet_and_confirm_identity",
     "node-1735264873079": "ask_availability",
     "node-1735970090937": "ask_availability",
+    "node-availability": "ask_availability",
     "node-1735264921453": "ask_intent",
+    "node-explain": "ask_intent",
     "fallback_intent": "ask_intent",
+    "fallback-intent": "ask_intent",
     "node-1735267546732": "ask_location", # Initial combined node
+    "node-ask-city": "ask_location",
     "fallback_location": "ask_location",
+    "fallback-city": "ask_location",
     "fallback_budget": "ask_budget",
+    "fallback-budget": "ask_budget",
     "node-1736323961832": "share_property",
     "node-1735265015507": "ask_visit_time",
+    "node-visit": "ask_visit_time",
     "fallback_visit_datetime": "ask_visit_time",
+    "fallback-visit": "ask_visit_time",
     "node-1736492391269": "ask_callback_time",
+    "node-callback": "ask_callback_time",
     "fallback_callback_time": "ask_callback_time",
     "node-1735265209472": "confirm_and_close",
     "node-1736567518748": "confirm_and_close",
+    "node-confirm-callback": "confirm_and_close",
+    "node-confirm-visit": "confirm_and_close",
 }
 
 # Nodes that should auto-advance through skip edges after delivering response
@@ -721,8 +768,12 @@ class StateManager:
 
     def load_schema(self) -> None:
         try:
-            with open(self.json_path, "r", encoding="utf-8") as handle:
-                self.schema = json.load(handle)
+            if os.path.isdir(self.json_path):
+                from flows.loader import load_agent_directory
+                self.schema = load_agent_directory(self.json_path)
+            else:
+                with open(self.json_path, "r", encoding="utf-8") as handle:
+                    self.schema = json.load(handle)
         except Exception as exc:
             logger.error("Failed to load StateManager schema from %s: %s", self.json_path, exc)
             return
@@ -1108,11 +1159,11 @@ class StateManager:
         user_question = _detect_user_question(user_text)
         if user_question:
             if (
-                current_node.get("id") == "node-1735264873079"
+                current_node.get("id") in {"node-1735264873079", "node-availability"}
                 and user_question in {"purpose", "identity", "confusion"}
                 and _has_availability_confirmation(user_text)
             ):
-                next_node = self.nodes.get("node-1735264921453")
+                next_node = self.nodes.get("node-1735264921453") or self.nodes.get("node-explain")
                 if next_node:
                     _log("STATE", f"{current_node['id']} -> {next_node['id']} (availability confirmed with question)")
                     self.current_node_id = next_node["id"]
@@ -1215,7 +1266,7 @@ class StateManager:
         # to auto-skip if a required slot was just provided.
         if self._should_skip_node(current_node):
             _log("SKIP", f"Node {current_node.get('id')} skipping because slots are now fulfilled")
-            skip_dest = self._first_destination(current_node)
+            skip_dest = self._resolve_skip_destination(current_node)
             if skip_dest:
                 next_node = self.nodes.get(skip_dest) or current_node
                 current_node = next_node
@@ -1246,7 +1297,7 @@ class StateManager:
                 }
                 
                 if intent not in override_intents:
-                    forward_id = self._first_destination(current_node)
+                    forward_id = self._resolve_skip_destination(current_node)
                     if forward_id:
                         next_node = self.nodes.get(forward_id)
                         if next_node:
@@ -1268,7 +1319,7 @@ class StateManager:
 
         # Callback time recovery from fallback
         if current_node.get("id") == "fallback_callback_time" and intent == "provide_timeline":
-            resume_node_id = self._first_destination(current_node)
+            resume_node_id = self._resolve_skip_destination(current_node)
             resume_node = self.nodes.get(resume_node_id) if resume_node_id else None
             if resume_node:
                 _log("STATE", f"{current_node['id']} -> {resume_node['id']} (resume callback)")
@@ -1324,7 +1375,7 @@ class StateManager:
                         self._same_node_count = 0
                     else:
                         _log("LOOP PREVENTION", f"Forcing transition from {current_node['id']}")
-                        forward_id = self._first_destination(current_node)
+                        forward_id = self._resolve_skip_destination(current_node)
                         if forward_id:
                             next_node = self.nodes.get(forward_id) or next_node
                         else:
@@ -1418,8 +1469,8 @@ class StateManager:
         # ── Global Interrupts / Shortcuts ───────────────────────────────────────────
         # 1. Callback scheduling shortcut on busy
         if intent in {"deny_time", "busy", "call_later", "not_now"}:
-            if node_id != "node-1736492391269":
-                target = self.nodes.get("node-1736492391269")  # Callback Scheduling
+            if node_id not in {"node-1736492391269", "node-callback"}:
+                target = self.nodes.get("node-1736492391269") or self.nodes.get("node-callback")  # Callback Scheduling
                 if target:
                     _log("STATE", f"{node_id} -> {target['id']} (forced callback scheduling)")
                     return target
@@ -1437,8 +1488,8 @@ class StateManager:
 
         # 3. Wrong person / wrong number globally
         if intent in {"deny_identity", "wrong_person", "wrong_number"}:
-            if node_id != "node-1736492520068":
-                target = self.nodes.get("node-1736492520068")  # Immediate End Call
+            if node_id not in {"node-1736492520068", "node-wrong-person"}:
+                target = self.nodes.get("node-1736492520068") or self.nodes.get("node-wrong-person")  # Immediate End Call / Wrong Person
                 if not target:
                     # Fallback to any end node in dynamic flow
                     target = next((n for n in self.nodes.values() if n.get("type") == "end"), None)
@@ -1447,14 +1498,14 @@ class StateManager:
                     return target
 
         # 2. Resuming flow from callback
-        if node_id in {"node-1736492391269", "fallback_callback_time"}:
+        if node_id in {"node-1736492391269", "node-callback", "fallback_callback_time"}:
             if intent in {"confirm_availability", "provide_intent", "confirm"}:
-                target = self.nodes.get("node-1735264921453")  # Ask Intent
+                target = self.nodes.get("node-1735264921453") or self.nodes.get("node-explain")  # Ask Intent
                 if target:
                     _log("STATE", f"{node_id} -> {target['id']} (resumed flow from callback)")
                     return target
             if intent in {"deny", "deny_interest", "deny_time"}:
-                target = self.nodes.get("node-1736492520068")  # Immediate End Call
+                target = self.nodes.get("node-1736492520068") or self.nodes.get("node-wrong-person")  # Immediate End Call / Wrong Person
                 if not target:
                     target = next((n for n in self.nodes.values() if n.get("type") == "end"), None)
                 if target:
@@ -1465,14 +1516,14 @@ class StateManager:
         # When user gives a valid intent (buy/invest/rent/sell) on either the Ask
         # Intent node OR its fallback, skip intermediate steps and jump directly
         # to the correct destination.
-        if node_id in {"node-1735264921453", "fallback_intent"}:
+        if node_id in {"node-1735264921453", "node-explain", "fallback_intent", "fallback-intent"}:
             if intent in {"provide_intent", "provide_property_type", "provide_location", "provide_budget"}:
-                target = self.nodes.get("node-1735267546732")  # Ask Location & Budget
+                target = self.nodes.get("node-1735267546732") or self.nodes.get("node-ask-city")  # Ask Location & Budget / City
                 if target:
                     _log("STATE", f"{node_id} -> {target['id']} ({intent} shortcut)")
                     return target
             if intent == "seller_interest":
-                target = self.nodes.get("node-1736510533232")  # Seller Flow Start
+                target = self.nodes.get("node-1736510533232") or self.nodes.get("node-seller-flow")  # Seller Flow Start
                 if target:
                     _log("STATE", f"{node_id} -> {target['id']} (seller shortcut)")
                     return target
@@ -1482,6 +1533,22 @@ class StateManager:
         if not edges:
             _log("STATE", f"No outgoing edges from {current_node['id']} - staying on current node")
             return current_node
+
+        # Check if any edge condition matches the extracted entity/slot value
+        for slot in self._collect_slots(current_node):
+            val = self.conversation_data.get(slot)
+            if val:
+                val_list = [str(val).lower().strip()]
+                if isinstance(val, list):
+                    val_list = [str(v).lower().strip() for v in val]
+                for edge in edges:
+                    condition = (edge.get("condition") or "").lower().strip()
+                    if any(condition == v or v in condition for v in val_list):
+                        destination_id = edge.get("destination_node_id")
+                        destination = self.nodes.get(destination_id) if destination_id else None
+                        if destination:
+                            _log("STATE", f"{current_node['id']} -> {destination['id']} (slot value '{val}' matches edge condition '{condition}')")
+                            return destination
 
         intents_to_match = [intent]
         if raw_intent and raw_intent not in intents_to_match:
@@ -1723,7 +1790,7 @@ class StateManager:
         seen: set[str] = set()
         while self._should_skip_node(current):
             _log("SKIP", f"{current['id']} - {self._skip_reason(current)}")
-            next_id = self._first_destination(current)
+            next_id = self._resolve_skip_destination(current)
             if not next_id or next_id in seen:
                 return current
             seen.add(next_id)
@@ -1766,7 +1833,7 @@ class StateManager:
             if current["id"] in visited:
                 break
             visited.add(current["id"])
-            forward_id = self._first_destination(current)
+            forward_id = self._resolve_skip_destination(current)
             if not forward_id:
                 break
             forward_node = self.nodes.get(forward_id)
@@ -1785,29 +1852,37 @@ class StateManager:
         """
         if not condition:
             return False
-        normalized = condition.strip().lower()
+        normalized = condition.strip().lower().replace("_", " ")
         
         # 2.1 Intent Alias Mapping (Expanded as per instruction)
         intent_aliases = {
             "confirm": {
                 "confirm", "affirm", "yes", "acknowledge", "open_yes", "perm_yes",
                 "conv_yes", "interested", "okay", "ok", "sure", "haan", "acha",
+                "conversation finished", "finished",
             },
             "deny": {"deny", "no", "reject", "decline", "conv_no", "not_interested"},
             "deny_time": {"deny_time", "busy", "not_now", "call_later", "perm_busy", "later"},
             "provide_intent": {"provide_intent", "intent_active", "intent_info", "ask_info"},
+            "provide_info": {
+                "provide_info", "provide info", "info", "particulars", "details",
+                "conversation finished", "finished",
+            },
             # 2.2 Fallback Routing - retry is a synonym for unclear
-            "unclear": {"unclear", "fallback", "retry", "hmm", "noise"},
+            "unclear": {
+                "unclear", "fallback", "retry", "hmm", "noise",
+                "conversation finished", "finished",
+            },
             "unclear_intent": {"unclear_intent", "intent_fallback"},
             "slots_collected": {"slots_collected", "qual_done", "completed", "details provided"},
         }
         
         for intent in intents_to_match:
-            key = intent.strip().lower()
+            key = intent.strip().lower().replace("_", " ")
             if key and key in normalized:
                 return True
-            aliases = intent_aliases.get(key, set())
-            if any(alias in normalized for alias in aliases):
+            aliases = intent_aliases.get(intent.strip().lower(), set())
+            if any(alias.replace("_", " ") in normalized for alias in aliases):
                 return True
         return False
 
@@ -1823,6 +1898,12 @@ class StateManager:
         return keys
 
     def _merge_entities(self, entities: dict[str, Any], intent: str = "") -> None:
+        entities = dict(entities)
+        if "location" in entities and "preferred_city" in self.entity_keys:
+            entities["preferred_city"] = entities["location"]
+        if "preferred_city" in entities and "location" in self.entity_keys:
+            entities["location"] = entities["preferred_city"]
+
         for key in self.entity_keys:
             # Match keys case-insensitively or with space/underscore normalization
             value = None
@@ -1895,6 +1976,28 @@ class StateManager:
         edge = next(iter(node.get("edges", [])), None)
         return edge.get("destination_node_id", "") if edge else ""
 
+    def _resolve_skip_destination(self, node: dict[str, Any]) -> str:
+        edges = node.get("edges", [])
+        if not edges:
+            return ""
+            
+        # Try to match slot values against edge conditions
+        for slot in self._collect_slots(node):
+            val = self.conversation_data.get(slot)
+            if val:
+                val_list = [str(val).lower().strip()]
+                if isinstance(val, list):
+                    val_list = [str(v).lower().strip() for v in val]
+                for edge in edges:
+                    condition = (edge.get("condition") or "").lower().strip()
+                    if any(condition == v or v in condition for v in val_list):
+                        destination_id = edge.get("destination_node_id")
+                        if destination_id:
+                            return destination_id
+                            
+        # Fallback to first destination
+        return self._first_destination(node)
+
     def _normalize_intent_for_context(
         self,
         current_node: dict[str, Any],
@@ -1917,13 +2020,13 @@ class StateManager:
         if asks_call_purpose:
             return intent
 
-        if node_id in {"node-1735267546732", "fallback_location", "fallback_budget"}:
+        if node_id in {"node-1735267546732", "node-ask-city", "fallback_location", "fallback-city", "fallback_budget", "fallback-budget"}:
             if self._is_location_suggestion(clean_text, current_node):
                 _log("INTENT NORMALIZED", "Location suggestion requested -> ask_location_suggestion")
                 return "ask_location_suggestion"
 
         # ── buyer_requirements_ready: auto-transition when both location+budget collected ──
-        if node_id == "node-1735267546732":
+        if node_id in {"node-1735267546732", "node-ask-city"}:
             loc_ready = self.conversation_data.get("location") or entities.get("location")
             bud_ready = self.conversation_data.get("budget") or entities.get("budget")
             
@@ -1940,7 +2043,7 @@ class StateManager:
         # ── Ask Intent node: map purchase/investment answers to provide_intent ──────
         # The LLM sometimes returns confirm_identity/unclear for "for myself",
         # "investment", "personal use" etc. We intercept here to keep the flow moving.
-        if node_id in {"node-1735264921453", "fallback_intent"}:
+        if node_id in {"node-1735264921453", "node-explain", "fallback_intent", "fallback-intent"}:
             _BUY_SIGNALS = (
                 # Personal use
                 "for myself", "myself", "personal use", "own use", "personal",
@@ -2035,7 +2138,7 @@ class StateManager:
 
         # Callback scheduling accepts broad natural time expressions and normalizes
         # them into a specific callback time so we don't loop on fallback prompts.
-        if node_id in {"node-1736492391269", "fallback_callback_time"}:
+        if node_id in {"node-1736492391269", "node-callback", "fallback_callback_time"}:
             callback_time_keywords = [
                 "morning", "afternoon", "evening", "night",
                 "am", "pm", "after", "post", "around",
@@ -2065,9 +2168,9 @@ class StateManager:
             "dont mind", "no specific preference", "not particular",
         }
         if any(phrase in text for phrase in uncertain):
-            if current_node["id"] == "node-1735264921453":
+            if current_node["id"] in {"node-1735264921453", "node-explain"}:
                 return "unclear_intent"
-            if current_node["id"] == "node-1735267546732":
+            if current_node["id"] in {"node-1735267546732", "node-ask-city"}:
                 if self.conversation_data.get("location") or entities.get("location"):
                     return "unclear_budget"
                 if self.conversation_data.get("budget") or entities.get("budget"):
@@ -2077,9 +2180,9 @@ class StateManager:
                 return "unclear_location"
             if current_node["id"] == "node-1767420514711":
                 return "unclear_property_type"
-            if current_node["id"] == "node-1735265015507":
+            if current_node["id"] in {"node-1735265015507", "node-visit"}:
                 return "unclear_visit_datetime"
-            if current_node["id"] == "node-1736492391269":
+            if current_node["id"] in {"node-1736492391269", "node-callback"}:
                 return "unclear_callback_time"
 
         # ── Catch-all: signals ───────────────────────────────────────────
@@ -2273,6 +2376,8 @@ class StateManager:
 
     def _clean_entity_value(self, key: str, value: Any) -> Optional[str]:
         text = re.sub(r"\s+", " ", str(value).strip())
+        # Strip common punctuation (like Hindi full stop '।', commas, periods)
+        text = re.sub(r"[.?।!,;]", "", text).strip()
         if not text:
             return None
 
