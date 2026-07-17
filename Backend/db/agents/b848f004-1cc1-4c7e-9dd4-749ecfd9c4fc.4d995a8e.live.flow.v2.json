@@ -1,0 +1,299 @@
+{
+  "schema_version": "2.0",
+  "id": "flowv2_5b9a39fb0e95",
+  "agent_id": "b848f004-1cc1-4c7e-9dd4-749ecfd9c4fc",
+  "agent_name": "ira",
+  "agent_type": "education",
+  "status": "published",
+  "runtime_mode": "live",
+  "default_locale": "en",
+  "supported_locales": [
+    "en",
+    "hi",
+    "mr"
+  ],
+  "start_node_id": "start",
+  "global_prompt": "You are an education counselling voice agent.\n\nPrimary goal:\nUnderstand the student's course interest and connect them with the right counsellor.\n\nConversation style:\nBe encouraging, patient, and clear. Ask one question at a time. Support parents and students without sounding pushy.\n\nDiscovery questions:\n1. Ask which course, program, exam, or career path they are interested in.\n2. Ask current education level.\n3. Ask preferred city, online/offline preference, and timeline.\n4. Ask budget or fee range only if the conversation naturally allows it.\n5. Ask whether a counsellor should call back.\n\nRules:\nDo not guarantee admission, scholarship, visa approval, placement, or exam results.\n\nFinal outcome:\nSummarize the student requirement and confirm the counselling follow-up.\n\nWebsite intelligence source: https://google.com.\nVerified business name: Google.\nRelevant website sections found: home; general; faq; services.\nVerified products/services: Build with Nano Banana 2 Lite and Gemini Omni Flash; Gemini Spark updates; Working towards a world where no one is surprised by a natural disaster; Google around the globe; Get the latest news from Google in your inbox.\nWebsite-backed value points: Create your custom ads plan with a Google Ads Expert..\nQualification questions to collect: Which service are you most interested in?; When are you planning to make a decision?.\nObjection guidance: price_concern: Acknowledge budget concern and offer to match options to their range.; needs_time: Offer a short follow-up slot instead of pressuring the caller..\nUse only verified website facts and keep unsupported claims out of the call.",
+  "slots": [
+    {
+      "id": "interested",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "course_interest",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "education_level",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "city",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "budget",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "callback",
+      "required": true,
+      "source": "conversation"
+    }
+  ],
+  "intents": [
+    {
+      "id": "confirm",
+      "examples": [
+        "yes",
+        "okay",
+        "sure"
+      ]
+    },
+    {
+      "id": "deny",
+      "examples": [
+        "no",
+        "not interested"
+      ]
+    },
+    {
+      "id": "unclear",
+      "examples": [
+        "hmm",
+        "repeat"
+      ]
+    },
+    {
+      "id": "provide_info",
+      "examples": [
+        "my budget is 50 lakh"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "message",
+      "label": "Greeting",
+      "response": {
+        "en": "Hello, this is ira. Am I speaking with {{name}}?"
+      },
+      "transitions": [
+        {
+          "intent": "confirm",
+          "target": "discovery",
+          "label": "Confirm"
+        },
+        {
+          "intent": "deny",
+          "target": "end",
+          "label": "Deny"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback",
+          "label": "Unclear"
+        }
+      ],
+      "collects": []
+    },
+    {
+      "id": "discovery",
+      "type": "slot_collection",
+      "label": "Discovery",
+      "collects": [
+        "interested",
+        "course_interest",
+        "education_level",
+        "city",
+        "budget",
+        "callback"
+      ],
+      "response": {
+        "en": "Could you share a little about what you are looking for?"
+      },
+      "transitions": [
+        {
+          "intent": "provide_info",
+          "target": "confirm_followup",
+          "label": "Provide Info"
+        },
+        {
+          "intent": "confirm",
+          "target": "confirm_followup",
+          "label": "Confirm"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback",
+          "label": "Unclear"
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "type": "fallback",
+      "label": "Clarify",
+      "response": {
+        "en": "Sorry, I did not catch that clearly. Could you repeat it once?"
+      },
+      "fallback": {
+        "max_attempts": 2,
+        "escalation_target": "end"
+      },
+      "transitions": [
+        {
+          "intent": "provide_info",
+          "target": "discovery",
+          "label": "Provide Info"
+        },
+        {
+          "intent": "confirm",
+          "target": "discovery",
+          "label": "Confirm"
+        },
+        {
+          "intent": "deny",
+          "target": "end",
+          "label": "Deny"
+        }
+      ],
+      "collects": []
+    },
+    {
+      "id": "confirm_followup",
+      "type": "message",
+      "label": "Confirm Follow-up",
+      "response": {
+        "en": "Thanks. I will have the team follow up with the right details."
+      },
+      "transitions": [
+        {
+          "intent": "confirm",
+          "target": "end",
+          "label": "Confirm"
+        },
+        {
+          "intent": "deny",
+          "target": "end",
+          "label": "Deny"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback",
+          "label": "Unclear"
+        }
+      ],
+      "collects": []
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "End",
+      "response": {
+        "en": "Thank you. Have a good day."
+      },
+      "transitions": [],
+      "collects": []
+    }
+  ],
+  "metadata": {
+    "source": "website_intelligence",
+    "source_language": "English",
+    "validation_required": true,
+    "source_url": "https://google.com",
+    "industry": "education",
+    "review_required": true,
+    "website_intelligence": {
+      "domain": "google.com",
+      "source_url": "https://google.com",
+      "industry": "education",
+      "advisory_only": true,
+      "auto_publish": false,
+      "quality": {
+        "score": 100,
+        "level": "high",
+        "ready_for_review": true,
+        "warnings": []
+      },
+      "evidence_urls": [
+        "https://google.com",
+        "https://about.google/",
+        "https://business.google.com/en-all/google-ads/",
+        "https://www.google.com/",
+        "https://accounts.google.com/v3/signin/identifier?continue=https%3A%2F%2Fmail.google.com%2Fmail%2F%26ogbl%2F&dsh=S940842520%3A1783005952937413&emr=1&ltmpl=default&ltmplcache=2&osid=1&passive=true&scc=1&service=mail&ss=1&flowName=WebLiteSignIn&flowEntry=ServiceLogin&ifkv=AcDsRvxr1_yXfYmVE4jh8lNiSXIwchVSOzcICSCEctA2v8U75ERdBjHAAOFJmsJBwA44OXnHjK6r",
+        "https://www.google.com/imghp?hl=en&ogbl",
+        "https://accounts.google.com/v3/signin/identifier?continue=https%3A%2F%2Fwww.google.com%2F&dsh=S875858552%3A1783005966330907&ec=GAZAmgQ&hl=en&passive=true&flowName=WebLiteSignIn&flowEntry=ServiceLogin&ifkv=AcDsRvxNL9xUraD4paqm36wFiYFOdfyWocOGJuoNBunrVCOfujncyRJFRq7dGkMD7uDyHxJcDkBM_Q",
+        "https://www.google.com/advanced_search?hl=en-IN&authuser=0",
+        "https://www.google.com/preferences?hl=hi",
+        "https://www.google.com/preferences?hl=bn",
+        "https://www.google.com/preferences?hl=te",
+        "https://www.google.com/preferences?hl=mr"
+      ],
+      "content_inventory": {
+        "page_types": {
+          "home": 2,
+          "general": 14,
+          "faq": 1,
+          "services": 1,
+          "legal": 2
+        },
+        "has_services": true,
+        "has_faq": true,
+        "has_contact": false,
+        "noise_filtered": true
+      },
+      "review_checklist": [
+        {
+          "key": "human_review_required",
+          "label": "Human review required before publishing",
+          "passed": true
+        },
+        {
+          "key": "quality_ready_for_review",
+          "label": "Extraction quality is ready for review",
+          "passed": true
+        },
+        {
+          "key": "source_evidence_present",
+          "label": "Website evidence URLs are attached",
+          "passed": true
+        },
+        {
+          "key": "services_detected",
+          "label": "Products or services were detected",
+          "passed": true
+        },
+        {
+          "key": "conversation_guidance_present",
+          "label": "Qualification or objection guidance is present",
+          "passed": true
+        },
+        {
+          "key": "noise_filtered",
+          "label": "Crawler noise filtering was applied",
+          "passed": true
+        }
+      ],
+      "limitations": [
+        "Only public website content fetched within configured crawl limits was used.",
+        "Human review is required before publishing any generated workflow."
+      ]
+    },
+    "applied_from_script_draft_id": "9aafd4c7-0160-4883-960d-81602cdff791",
+    "live_runtime_unchanged": false,
+    "published_at": "2026-07-02T20:58:10.135960",
+    "published_to": "v1_runtime_schema"
+  },
+  "validation": {
+    "status": "valid",
+    "node_count": 5,
+    "terminal_count": 1
+  }
+}

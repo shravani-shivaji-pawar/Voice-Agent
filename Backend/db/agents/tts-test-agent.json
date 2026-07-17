@@ -1,0 +1,565 @@
+{
+    "agent_id": "tts-test-agent",
+    "channel": "voice",
+    "agent_name": "Neha \u2014 Real Estate Specialist (Parler TTS)",
+    "developer": "Suncity Projects",
+    "data_source": "https://www.suncityprojects.com/api/projects",
+    "last_data_sync": "2026-06-23T00:00:00.000Z",
+    "response_engine": {
+        "type": "conversation-flow",
+        "conversation_flow_id": "flow_suncity_all_projects_neha"
+    },
+    "language": "multi",
+    "data_storage_setting": "everything",
+    "is_published": false,
+    "post_call_analysis_model": "gpt-4o-mini",
+    "is_public": true,
+    "voice_id": "parler-default",
+    "voice_temperature": 0.5,
+    "voice_speed": 1.0,
+    "volume": 0.94,
+    "max_call_duration_ms": 3600000,
+    "interruption_sensitivity": 0.45,
+    "enable_dynamic_responsiveness": true,
+    "normalize_for_speech": true,
+    "allow_user_dtmf": true,
+    "all_projects": [
+        {
+            "name": "Suncity's Monarch Residences",
+            "slug": "suncity-monarch",
+            "category": "residential",
+            "status": "ongoing",
+            "rera_number": "RC/REP/HARERA/GGM/1037/769/2026/09",
+            "location": {
+                "area": "Sector 78, Village Shikohpur, Manesar",
+                "city": "Gurgaon",
+                "state": "Haryana",
+                "address": "Sector 78, Village Shikohpur, Manesar, Gurugram, Haryana"
+            },
+            "property_type": "3 & 4 BHK",
+            "area": "16 Acre",
+            "towers": 5,
+            "highlights": [
+                "3.15 acre dedicated sports zone",
+                "1.25 lakh sq. ft. clubhouse",
+                "100% ground-level vehicle-free zone",
+                "Natural light and ventilation focus"
+            ],
+            "floor_plans": [
+                {
+                    "type": "3 BHK",
+                    "area": "1333 sqft"
+                },
+                {
+                    "type": "4 BHK",
+                    "area": "1744 sqft"
+                }
+            ],
+            "connectivity": [
+                "NH-8 (2 min)",
+                "Dwarka Expressway",
+                "SPR",
+                "CPR",
+                "IMT Manesar",
+                "DLF Cyber City",
+                "IGI Airport"
+            ],
+            "nearby": {
+                "schools": [
+                    "Mount Olympus Juniors School (2 min)",
+                    "MatriKiran High School (5 min)",
+                    "Kidzee Pre School (8 min)"
+                ],
+                "hospitals": [
+                    "Aarvy Healthcare (8 min)",
+                    "Silver Streak Hospital (9 min)",
+                    "Fortis Hospital (25 min)"
+                ]
+            },
+            "description": "Luxury 3 & 4 BHK apartments spread across 16 acres with 3.15 acre sports zone, 1.25 lakh sqft clubhouse, and excellent connectivity to NH-8 and Dwarka Expressway."
+        },
+        {
+            "name": "Suncity Govind Sharnam",
+            "slug": "suncity-govind-sharnam",
+            "category": "residential",
+            "status": "ongoing",
+            "rera_number": "UPRERAPRJ585533/08/2024",
+            "location": {
+                "area": "Chhatikara, Vrindavan",
+                "city": "Mathura",
+                "state": "Uttar Pradesh",
+                "address": "Chhatikara, Vrindavan, Mathura, UP"
+            },
+            "property_type": "Residential Township",
+            "area": "9.4 Acre",
+            "highlights": [
+                "Modern comforts with spiritual essence",
+                "Wide green sit-outs with walking pavements",
+                "Modern gazebos in the greens",
+                "Jogging tracks in lush greenery"
+            ],
+            "connectivity": [
+                "Near Krishna Janmabhoomi",
+                "Mathura City Center"
+            ],
+            "description": "A spiritual township where modern comforts coexist with the essence of Vrindavan. Features green parks, walking pavements, and modern gazebos."
+        },
+        {
+            "name": "Suncity Galleria",
+            "slug": "suncity-galleria",
+            "category": "commercial",
+            "status": "ongoing",
+            "rera_number": "RAJ/P/2025/3455",
+            "location": {
+                "area": "Sikar Road",
+                "city": "Jaipur",
+                "state": "Rajasthan",
+                "address": "Sikar Road, Jaipur, Rajasthan"
+            },
+            "property_type": "Commercial Galleria-style Retail Shops",
+            "area": "7.96 Acre",
+            "highlights": [
+                "100% ground coverage & low maintenance",
+                "Plot sizes from 47 to 143 sq. yd.",
+                "24X7 Security",
+                "Low investment, high ROI"
+            ],
+            "connectivity": [
+                "Sikar Road Main Road",
+                "NH-8"
+            ],
+            "description": "Galleria-style retail shops with flexible plot sizes, ample parking, and high ROI potential on Sikar Road, Jaipur."
+        },
+        {
+            "name": "The Empire Centre",
+            "slug": "the-empire-centre",
+            "category": "commercial",
+            "status": "ongoing",
+            "rera_number": "HARERA/GGM/919/651/2025/22",
+            "location": {
+                "area": "Sector-43, Golf Course Road",
+                "city": "Gurgaon",
+                "state": "Haryana",
+                "address": "Sector-43, Golf Course Road, Gurgaon, Haryana"
+            },
+            "property_type": "Premium Commercial Development",
+            "area": "0.8 Acre",
+            "highlights": [
+                "Extravagant emporium space",
+                "Grand entrance lobby",
+                "Private balcony with Gaming Zone",
+                "20 mins from IGI Airport"
+            ],
+            "connectivity": [
+                "Golf Course Road",
+                "MG Road (5 min)",
+                "IGI Airport (20 min)"
+            ],
+            "description": "Premium commercial development on Golf Course Road with extravagant emporium spaces, gaming zone, and proximity to premium residential societies."
+        },
+        {
+            "name": "The Empire",
+            "slug": "the-empire",
+            "category": "commercial",
+            "status": "ongoing",
+            "rera_number": "HARERA/GGM/750/482/2023/94",
+            "location": {
+                "area": "Sector-43, Golf Course Road",
+                "city": "Gurgaon",
+                "state": "Haryana",
+                "address": "Sector-43, Golf Course Road, Gurgaon, Haryana"
+            },
+            "property_type": "Commercial: Office, Retail, Restaurant Spaces",
+            "area": "0.5 Acre",
+            "highlights": [
+                "105 meter height building",
+                "3 basement & G+24 floors",
+                "Ultra-premium showrooms",
+                "Ground floor height 5.8m"
+            ],
+            "connectivity": [
+                "Golf Course Road",
+                "MG Road",
+                "DLF Cyber City"
+            ],
+            "description": "Ultra-premium commercial tower with office, retail, and restaurant spaces. 105m height, G+24 with 3 basements, on Golf Course Road."
+        },
+        {
+            "name": "Jewel Tower",
+            "slug": "jewel-tower",
+            "category": "commercial",
+            "status": "ongoing",
+            "rera_number": "RAJ/P/2023/2898",
+            "location": {
+                "area": "C-Scheme",
+                "city": "Jaipur",
+                "state": "Rajasthan",
+                "address": "C-Scheme, Jaipur, Rajasthan"
+            },
+            "property_type": "Commercial Office Space",
+            "area": "0.6 Acre",
+            "highlights": [
+                "Contemporary architecture",
+                "Prestigious business destination",
+                "Thoughtfully planned amenities",
+                "Symbol of success"
+            ],
+            "connectivity": [
+                "C-Scheme Central Jaipur",
+                "MI Road",
+                "Jaipur Railway Station"
+            ],
+            "description": "Premium commercial office space in C-Scheme, Jaipur. Contemporary architecture and thoughtfully planned amenities for enterprises."
+        },
+        {
+            "name": "Suncity Ultima",
+            "slug": "suncity-ultima",
+            "category": "residential",
+            "status": "ongoing",
+            "rera_number": "PBRERA-SAS79-PR1049",
+            "location": {
+                "area": "Gazipur Road",
+                "city": "Zirakpur",
+                "state": "Punjab",
+                "address": "Gazipur Road, Zirakpur, Punjab"
+            },
+            "property_type": "Ultra-luxury Residential Apartments",
+            "area": "6.5 Acre",
+            "highlights": [
+                "Spacious 3 BHK apartments",
+                "Premium facilities",
+                "Tricity's thriving surroundings",
+                "Sophistication and lifestyle"
+            ],
+            "connectivity": [
+                "Chandigarh (15 min)",
+                "Airport Road",
+                "Patiala Highway"
+            ],
+            "description": "Ultra-luxury 3 BHK apartments in Zirakpur with premium facilities. Perfect blend of sophistication and lifestyle in Tricity."
+        },
+        {
+            "name": "Jewel Of India Phase-2",
+            "slug": "jewel-of-india",
+            "category": "residential",
+            "status": "ongoing",
+            "rera_number": "RAJ/P/2021/1712",
+            "location": {
+                "area": "JLN Marg",
+                "city": "Jaipur",
+                "state": "Rajasthan",
+                "address": "JLN Marg, Jaipur, Rajasthan"
+            },
+            "property_type": "Residential Group Housing (4/5 BHK)",
+            "area": "7 Acre",
+            "highlights": [
+                "Exquisite 4 & 5 BHK residences",
+                "New lavish amenities",
+                "Success of Phase-I continued",
+                "Unmatched elegance and comfort"
+            ],
+            "connectivity": [
+                "JLN Marg",
+                "Mansarovar",
+                "Jaipur Airport"
+            ],
+            "description": "Luxurious 4 & 5 BHK residences on JLN Marg, Jaipur. Building on the success of Phase-I with new lavish amenities."
+        }
+    ],
+    "project_quick_reference": {
+        "by_city": {
+            "Gurgaon": [
+                "Suncity Monarch Residences (3/4 BHK, Sector 78)",
+                "The Empire Centre (Commercial, Golf Course Road)",
+                "The Empire (Commercial, Golf Course Road)"
+            ],
+            "Jaipur": [
+                "Suncity Galleria (Commercial, Sikar Road)",
+                "Jewel Tower (Commercial, C-Scheme)",
+                "Jewel Of India Phase-2 (4/5 BHK, JLN Marg)"
+            ],
+            "Mathura": [
+                "Suncity Govind Sharnam (Residential Township, Vrindavan)"
+            ],
+            "Zirakpur": [
+                "Suncity Ultima (3 BHK, Gazipur Road)"
+            ]
+        },
+        "by_category": {
+            "residential": [
+                "Monarch Residences",
+                "Govind Sharnam",
+                "Ultima",
+                "Jewel Of India Phase-2"
+            ],
+            "commercial": [
+                "Galleria",
+                "The Empire Centre",
+                "The Empire",
+                "Jewel Tower"
+            ]
+        },
+        "by_budget": {
+            "budget_friendly": [
+                "Suncity Galleria (47-143 sq. yd. plots)",
+                "Suncity Govind Sharnam (Township)"
+            ],
+            "mid_range": [
+                "Suncity Ultima (3 BHK, Zirakpur)",
+                "Suncity Monarch Residences (3 BHK)"
+            ],
+            "premium": [
+                "Suncity Monarch Residences (4 BHK)",
+                "Jewel Of India Phase-2 (4/5 BHK)",
+                "The Empire Centre",
+                "The Empire",
+                "Jewel Tower"
+            ]
+        }
+    },
+    "conversationFlow": {
+        "conversation_flow_id": "flowv2_e40229e18d3d",
+        "version": 2,
+        "schema_version": "2.0",
+        "global_prompt": "You are a professional real estate sales voice agent for a property advisory team.\n\nPrimary goal:\nQualify the lead for buying, renting, or investing in residential property and capture the next best action.\n\nConversation style:\nBe warm, concise, consultative, and natural. Ask one question at a time. Do not sound like a form. Use the user's language style when possible: English, Hindi, Marathi, or Hinglish.\n\nDiscovery questions:\n1. Confirm whether they are looking to buy, rent, or invest.\n2. Ask preferred location or project area.\n3. Ask budget range.\n4. Ask property type such as 1 BHK, 2 BHK, 3 BHK, villa, plot, or commercial.\n5. Ask timeline such as immediate, this month, 3 months, or just exploring.\n6. Ask if they want a callback, site visit, WhatsApp details, or brochure.\n\nRules:\nNever overpromise pricing, availability, loan approval, legal clearance, or possession date. If the user asks for exact details, say the specialist will verify and share updated information.\n\nFinal outcome:\nSummarize the requirement in one sentence and confirm the follow-up action.",
+        "start_node_id": "start",
+        "nodes": [
+            {
+                "id": "root_greeting",
+                "name": "Initial Greeting",
+                "type": "conversation",
+                "intent_triggers": [
+                    "call_connected"
+                ],
+                "edges": [
+                    {
+                        "id": "to_discovery",
+                        "condition": "user responds",
+                        "destination_node_id": "discovery"
+                    }
+                ],
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Greet the user warmly as Neha \u2014 Real Estate Specialist (Parler TTS) and confirm identity using the lead name."
+                },
+                "response": "Hello, this is Neha \u2014 Real Estate Specialist (Parler TTS) from the Real Estate team. Am I speaking with {{name}}?"
+            },
+            {
+                "id": "start",
+                "name": "Greeting",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Greeting' and keep the reply concise."
+                },
+                "response": "Hello, this is Neha \u2014 Real Estate Specialist (Parler TTS). Am I speaking with {{name}}?",
+                "edges": [
+                    {
+                        "id": "edge_start_1_discovery",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "discovery"
+                    },
+                    {
+                        "id": "edge_start_2_end",
+                        "condition": "deny",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "deny"
+                        },
+                        "destination_node_id": "end"
+                    },
+                    {
+                        "id": "edge_start_3_fallback",
+                        "condition": "unclear",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "unclear"
+                        },
+                        "destination_node_id": "fallback"
+                    }
+                ],
+                "start_speaker": "agent",
+                "intent_triggers": [
+                    "call_connected"
+                ]
+            },
+            {
+                "id": "discovery",
+                "name": "Discovery",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Discovery' and keep the reply concise."
+                },
+                "response": "Could you share a little about what you are looking for?",
+                "edges": [
+                    {
+                        "id": "edge_discovery_1_confirm_followup",
+                        "condition": "provide info",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "provide info"
+                        },
+                        "destination_node_id": "confirm_followup"
+                    },
+                    {
+                        "id": "edge_discovery_2_confirm_followup",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "confirm_followup"
+                    },
+                    {
+                        "id": "edge_discovery_3_fallback",
+                        "condition": "unclear",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "unclear"
+                        },
+                        "destination_node_id": "fallback"
+                    }
+                ],
+                "intent_triggers": [
+                    "confirm",
+                    "provide_info"
+                ],
+                "collects": [
+                    "Name",
+                    "Location",
+                    "Budget",
+                    "Property Type",
+                    "Interested"
+                ]
+            },
+            {
+                "id": "fallback",
+                "name": "Clarify",
+                "type": "fallback",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Clarify' and keep the reply concise."
+                },
+                "response": "Sorry, I did not catch that clearly. Could you repeat it once?",
+                "edges": [
+                    {
+                        "id": "edge_fallback_1_discovery",
+                        "condition": "provide info",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "provide info"
+                        },
+                        "destination_node_id": "discovery"
+                    },
+                    {
+                        "id": "edge_fallback_2_discovery",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "discovery"
+                    },
+                    {
+                        "id": "edge_fallback_3_end",
+                        "condition": "deny",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "deny"
+                        },
+                        "destination_node_id": "end"
+                    }
+                ],
+                "intent_triggers": [
+                    "unclear"
+                ],
+                "fallback": {
+                    "max_attempts": 2,
+                    "escalation_target": "end"
+                }
+            },
+            {
+                "id": "confirm_followup",
+                "name": "Confirm Follow-up",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Confirm Follow-up' and keep the reply concise."
+                },
+                "response": "Thanks. I will have the team follow up with the right details.",
+                "edges": [
+                    {
+                        "id": "edge_confirm_followup_1_end",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "end"
+                    },
+                    {
+                        "id": "edge_confirm_followup_2_end",
+                        "condition": "deny",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "deny"
+                        },
+                        "destination_node_id": "end"
+                    },
+                    {
+                        "id": "edge_confirm_followup_3_fallback",
+                        "condition": "unclear",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "unclear"
+                        },
+                        "destination_node_id": "fallback"
+                    }
+                ],
+                "intent_triggers": [
+                    "confirm",
+                    "provide_info"
+                ]
+            },
+            {
+                "id": "end",
+                "name": "End",
+                "type": "end",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'End' and keep the reply concise."
+                },
+                "response": "Thank you. Have a good day.",
+                "edges": [],
+                "intent_triggers": [
+                    "confirm",
+                    "deny"
+                ]
+            }
+        ]
+    },
+    "provider_config": {
+        "stt_provider": "deepgram",
+        "tts_provider": "elevenlabs",
+        "cartesia_voice_id": "95d51f79-c397-46f9-b49a-23763d3eaa2d",
+        "parler_description": "A young boy with a clear, calm, and moderate-paced voice speaking in Hindi.",
+        "elevenlabs_voice_id": "1uw2JCw3L9jqeOwqkt7T",
+        "elevenlabs_model": "eleven_multilingual_v2",
+        "elevenlabs_stability": 0.95,
+        "elevenlabs_similarity": 0.6,
+        "elevenlabs_style": 0.0,
+        "elevenlabs_speaker_boost": true
+    },
+    "global_prompt": "You are a professional real estate sales voice agent for a property advisory team.\n\nPrimary goal:\nQualify the lead for buying, renting, or investing in residential property and capture the next best action.\n\nConversation style:\nBe warm, concise, consultative, and natural. Ask one question at a time. Do not sound like a form. Use the user's language style when possible: English, Hindi, Marathi, or Hinglish.\n\nDiscovery questions:\n1. Confirm whether they are looking to buy, rent, or invest.\n2. Ask preferred location or project area.\n3. Ask budget range.\n4. Ask property type such as 1 BHK, 2 BHK, 3 BHK, villa, plot, or commercial.\n5. Ask timeline such as immediate, this month, 3 months, or just exploring.\n6. Ask if they want a callback, site visit, WhatsApp details, or brochure.\n\nRules:\nNever overpromise pricing, availability, loan approval, legal clearance, or possession date. If the user asks for exact details, say the specialist will verify and share updated information.\n\nFinal outcome:\nSummarize the requirement in one sentence and confirm the follow-up action.",
+    "agent_metadata": {
+        "agent_type": "real_estate_sales",
+        "assigned_email": "neha@example.com",
+        "client_id": "user-4bf543391f5f"
+    },
+    "conversation_flow_id": "flowv2_e40229e18d3d"
+}

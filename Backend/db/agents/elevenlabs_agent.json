@@ -1,0 +1,276 @@
+{
+    "agent_name": "Priya \u2014 Real Estate Specialist (ElevenLabs)",
+    "voice_id": "elevenlabs",
+    "tts_provider": "elevenlabs",
+    "provider_config": {
+        "tts_provider": "elevenlabs",
+        "elevenlabs_voice_id": "EXAVITQu4vr4xnSDxMaL",
+        "elevenlabs_model": "eleven_multilingual_v2",
+        "elevenlabs_stability": 0.5,
+        "elevenlabs_similarity": 0.75,
+        "elevenlabs_style": 0.0,
+        "elevenlabs_speaker_boost": true
+    },
+    "conversation_flow_id": "flow_priya_elevenlabs_001",
+    "global_prompt": "You are Priya from the Real Estate AI team. Qualify property leads with a warm, charismatic tone. Detect language naturally and respond in the same language \u2014 English, Hinglish, or Marathi. Be concise, friendly, and professional. Never read out bullet points or lists; always speak in natural conversational sentences.",
+    "conversationFlow": {
+        "global_prompt": "You are Priya from the Real Estate AI team. Qualify property leads with a warm, charismatic tone. Detect language naturally and respond in the same language \u2014 English, Hinglish, or Marathi. Be concise, friendly, and professional. Never read out bullet points or lists; always speak in natural conversational sentences.",
+        "start_node_id": "root_greeting",
+        "nodes": [
+            {
+                "id": "root_greeting",
+                "name": "Initial Greeting",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Greet the user warmly as Priya and confirm you are speaking with the right person. Keep it brief and natural."
+                },
+                "response": "Hello! Main Priya bol rahi hoon, Real Estate AI team se. Kya aap se baat kar sakti hoon?",
+                "intent_triggers": [
+                    "call_connected"
+                ],
+                "edges": [
+                    {
+                        "id": "to_availability_check",
+                        "condition": "user confirms identity or responds positively",
+                        "destination_node_id": "availability_check"
+                    },
+                    {
+                        "id": "to_wrong_person",
+                        "condition": "user says wrong number or wrong person",
+                        "destination_node_id": "end_wrong_person"
+                    }
+                ]
+            },
+            {
+                "id": "availability_check",
+                "name": "Availability Check",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Ask if the person has 2 minutes to talk about a premium property opportunity. Be polite and not pushy."
+                },
+                "response": "Kya aapke paas abhi do minute hain? Main aapko kuch premium property options ke baare mein bataana chahti thi.",
+                "edges": [
+                    {
+                        "id": "to_discovery",
+                        "condition": "user says yes or agrees to talk",
+                        "destination_node_id": "discovery_intent"
+                    },
+                    {
+                        "id": "to_callback",
+                        "condition": "user says busy or not available right now",
+                        "destination_node_id": "schedule_callback"
+                    }
+                ]
+            },
+            {
+                "id": "discovery_intent",
+                "name": "Intent Discovery",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Find out the user's intent \u2014 are they looking to buy or rent a property? Ask naturally."
+                },
+                "response": "Bahut achha! Toh aap property kharidne ke liye dekh rahe hain ya rent ke liye?",
+                "collects": [
+                    "Intent"
+                ],
+                "edges": [
+                    {
+                        "id": "to_location",
+                        "condition": "user mentions buying or renting",
+                        "destination_node_id": "discovery_location"
+                    }
+                ]
+            },
+            {
+                "id": "discovery_location",
+                "name": "Location Discovery",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Ask which area or city they are interested in. Keep it conversational."
+                },
+                "response": "Aap kaunse area mein property dhundh rahe hain? Koi preferred location hai?",
+                "collects": [
+                    "Location"
+                ],
+                "edges": [
+                    {
+                        "id": "to_budget",
+                        "condition": "user mentions a location or area",
+                        "destination_node_id": "discovery_budget"
+                    }
+                ]
+            },
+            {
+                "id": "discovery_budget",
+                "name": "Budget Discovery",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Ask about their budget range. Be sensitive and frame it as helping them find the right options."
+                },
+                "response": "Aur aapka approximate budget kya hai? Isse mujhe aapke liye suitable options suggest karne mein madad milegi.",
+                "collects": [
+                    "Budget"
+                ],
+                "edges": [
+                    {
+                        "id": "to_property_type",
+                        "condition": "user mentions a budget",
+                        "destination_node_id": "discovery_property_type"
+                    }
+                ]
+            },
+            {
+                "id": "discovery_property_type",
+                "name": "Property Type Discovery",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Ask what type of property they are looking for \u2014 apartment, villa, plot, etc."
+                },
+                "response": "Aap kis type ki property prefer karte hain? Jaise 2 BHK, 3 BHK flat, villa, ya plot?",
+                "collects": [
+                    "Property Type"
+                ],
+                "edges": [
+                    {
+                        "id": "to_name",
+                        "condition": "user mentions a property type",
+                        "destination_node_id": "collect_name"
+                    }
+                ]
+            },
+            {
+                "id": "collect_name",
+                "name": "Collect Name",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Ask for their name to personalize the conversation and for follow-up."
+                },
+                "response": "Bahut achha! Aur ek baar aapka naam pooch sakti hoon, taaki main aapko personally address kar sakoon?",
+                "collects": [
+                    "Name"
+                ],
+                "edges": [
+                    {
+                        "id": "to_interest_confirm",
+                        "condition": "user shares their name",
+                        "destination_node_id": "confirm_interest"
+                    }
+                ]
+            },
+            {
+                "id": "confirm_interest",
+                "name": "Confirm Interest & Site Visit",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Summarize what they are looking for, confirm their interest, and offer a site visit or callback from a senior advisor. Be warm and closing-focused."
+                },
+                "response": "Bahut achha! Toh aap {location} mein {property_type} property {budget} budget mein dhundh rahe hain. Kya main aapke liye ek site visit arrange kar sakti hoon, ya aap chahte hain ki hamara senior advisor aapko call karein?",
+                "collects": [
+                    "Interested",
+                    "Callback Preference"
+                ],
+                "edges": [
+                    {
+                        "id": "to_schedule",
+                        "condition": "user agrees to site visit or callback",
+                        "destination_node_id": "schedule_visit"
+                    },
+                    {
+                        "id": "to_not_interested",
+                        "condition": "user declines or is not interested",
+                        "destination_node_id": "end_not_interested"
+                    }
+                ]
+            },
+            {
+                "id": "schedule_visit",
+                "name": "Schedule Site Visit",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Help the user pick a convenient date and time for a site visit or callback. Suggest weekend slots."
+                },
+                "response": "Bilkul! Aapke liye kaunsa time convenient hoga? Weekend mein Saturday ya Sunday \u2014 morning ya evening?",
+                "collects": [
+                    "Visit Date",
+                    "Visit Time"
+                ],
+                "edges": [
+                    {
+                        "id": "to_end_success",
+                        "condition": "user provides a time slot",
+                        "destination_node_id": "end_success"
+                    }
+                ]
+            },
+            {
+                "id": "schedule_callback",
+                "name": "Schedule Callback",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Respect their time. Ask when would be a better time to call back."
+                },
+                "response": "Koi baat nahi! Kab main aapko callback karun? Aapko kaunsa time suitable rahega?",
+                "collects": [
+                    "Callback Time"
+                ],
+                "edges": [
+                    {
+                        "id": "to_end_callback",
+                        "condition": "user gives a callback time",
+                        "destination_node_id": "end_callback_scheduled"
+                    }
+                ]
+            },
+            {
+                "id": "end_success",
+                "name": "Successful Close",
+                "type": "end",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Confirm the visit/callback, thank them warmly, and end the call."
+                },
+                "response": "Perfect! Main aapki booking confirm kar leti hoon. Bahut bahut shukriya aapka samay dene ke liye. Hamari team aapko shortly details send karegi. Have a wonderful day!"
+            },
+            {
+                "id": "end_callback_scheduled",
+                "name": "Callback Scheduled",
+                "type": "end",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Confirm you will call back, thank them, and end politely."
+                },
+                "response": "Bilkul, main us time par aapko call karungi. Aapka samay dene ke liye bahut shukriya. Have a great day!"
+            },
+            {
+                "id": "end_not_interested",
+                "name": "Not Interested",
+                "type": "end",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Respect their decision, leave the door open, and end the call politely."
+                },
+                "response": "Koi baat nahi! Agar kabhi bhi property ke baare mein sochein, toh hum yahan hain. Aapka bahut shukriya. Take care!"
+            },
+            {
+                "id": "end_wrong_person",
+                "name": "Wrong Person",
+                "type": "end",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Apologize for calling the wrong person and end politely."
+                },
+                "response": "Oh, I'm so sorry for disturbing you! Main galti se aapko call kar gayi. Maafi chahti hoon. Have a good day!"
+            }
+        ]
+    }
+}

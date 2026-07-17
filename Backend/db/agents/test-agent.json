@@ -1,0 +1,243 @@
+{
+    "agent_name": "Test Agent",
+    "global_prompt": "You are a professional real estate sales voice agent for a property advisory team.\n\nPrimary goal:\nQualify the lead for buying, renting, or investing in residential property and capture the next best action.\n\nConversation style:\nBe warm, concise, consultative, and natural. Ask one question at a time. Do not sound like a form. Use the user's language style when possible: English, Hindi, Marathi, or Hinglish.\n\nDiscovery questions:\n1. Confirm whether they are looking to buy, rent, or invest.\n2. Ask preferred location or project area.\n3. Ask budget range.\n4. Ask property type such as 1 BHK, 2 BHK, 3 BHK, villa, plot, or commercial.\n5. Ask timeline such as immediate, this month, 3 months, or just exploring.\n6. Ask if they want a callback, site visit, WhatsApp details, or brochure.\n\nRules:\nNever overpromise pricing, availability, loan approval, legal clearance, or possession date. If the user asks for exact details, say the specialist will verify and share updated information.\n\nFinal outcome:\nSummarize the requirement in one sentence and confirm the follow-up action.",
+    "conversation_flow_id": "flowv2_ca6c27c64db7",
+    "conversationFlow": {
+        "conversation_flow_id": "flowv2_ca6c27c64db7",
+        "version": 2,
+        "schema_version": "2.0",
+        "global_prompt": "You are a professional real estate sales voice agent for a property advisory team.\n\nPrimary goal:\nQualify the lead for buying, renting, or investing in residential property and capture the next best action.\n\nConversation style:\nBe warm, concise, consultative, and natural. Ask one question at a time. Do not sound like a form. Use the user's language style when possible: English, Hindi, Marathi, or Hinglish.\n\nDiscovery questions:\n1. Confirm whether they are looking to buy, rent, or invest.\n2. Ask preferred location or project area.\n3. Ask budget range.\n4. Ask property type such as 1 BHK, 2 BHK, 3 BHK, villa, plot, or commercial.\n5. Ask timeline such as immediate, this month, 3 months, or just exploring.\n6. Ask if they want a callback, site visit, WhatsApp details, or brochure.\n\nRules:\nNever overpromise pricing, availability, loan approval, legal clearance, or possession date. If the user asks for exact details, say the specialist will verify and share updated information.\n\nFinal outcome:\nSummarize the requirement in one sentence and confirm the follow-up action.",
+        "start_node_id": "start",
+        "nodes": [
+            {
+                "id": "root_greeting",
+                "name": "Initial Greeting",
+                "type": "conversation",
+                "intent_triggers": [
+                    "call_connected"
+                ],
+                "edges": [
+                    {
+                        "id": "to_discovery",
+                        "condition": "user responds",
+                        "destination_node_id": "discovery"
+                    }
+                ],
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Greet the user warmly as Test Agent and confirm identity using the lead name."
+                },
+                "response": "Hello, this is Test Agent from the Real Estate team. Am I speaking with {{name}}?"
+            },
+            {
+                "id": "start",
+                "name": "Greeting",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Greeting' and keep the reply concise."
+                },
+                "response": "Hello, this is Test Agent. Am I speaking with {{name}}?",
+                "edges": [
+                    {
+                        "id": "edge_start_1_discovery",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "discovery"
+                    },
+                    {
+                        "id": "edge_start_2_end",
+                        "condition": "deny",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "deny"
+                        },
+                        "destination_node_id": "end"
+                    },
+                    {
+                        "id": "edge_start_3_fallback",
+                        "condition": "unclear",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "unclear"
+                        },
+                        "destination_node_id": "fallback"
+                    }
+                ],
+                "start_speaker": "agent",
+                "intent_triggers": [
+                    "call_connected"
+                ]
+            },
+            {
+                "id": "discovery",
+                "name": "Discovery",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Discovery' and keep the reply concise."
+                },
+                "response": "Could you share a little about what you are looking for?",
+                "edges": [
+                    {
+                        "id": "edge_discovery_1_confirm_followup",
+                        "condition": "provide info",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "provide info"
+                        },
+                        "destination_node_id": "confirm_followup"
+                    },
+                    {
+                        "id": "edge_discovery_2_confirm_followup",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "confirm_followup"
+                    },
+                    {
+                        "id": "edge_discovery_3_fallback",
+                        "condition": "unclear",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "unclear"
+                        },
+                        "destination_node_id": "fallback"
+                    }
+                ],
+                "intent_triggers": [
+                    "confirm",
+                    "provide_info"
+                ],
+                "collects": []
+            },
+            {
+                "id": "fallback",
+                "name": "Clarify",
+                "type": "fallback",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Clarify' and keep the reply concise."
+                },
+                "response": "Sorry, I did not catch that clearly. Could you repeat it once?",
+                "edges": [
+                    {
+                        "id": "edge_fallback_1_discovery",
+                        "condition": "provide info",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "provide info"
+                        },
+                        "destination_node_id": "discovery"
+                    },
+                    {
+                        "id": "edge_fallback_2_discovery",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "discovery"
+                    },
+                    {
+                        "id": "edge_fallback_3_end",
+                        "condition": "deny",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "deny"
+                        },
+                        "destination_node_id": "end"
+                    }
+                ],
+                "intent_triggers": [
+                    "unclear"
+                ],
+                "fallback": {
+                    "max_attempts": 2,
+                    "escalation_target": "end"
+                }
+            },
+            {
+                "id": "confirm_followup",
+                "name": "Confirm Follow-up",
+                "type": "conversation",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'Confirm Follow-up' and keep the reply concise."
+                },
+                "response": "Thanks. I will have the team follow up with the right details.",
+                "edges": [
+                    {
+                        "id": "edge_confirm_followup_1_end",
+                        "condition": "confirm",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "confirm"
+                        },
+                        "destination_node_id": "end"
+                    },
+                    {
+                        "id": "edge_confirm_followup_2_end",
+                        "condition": "deny",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "deny"
+                        },
+                        "destination_node_id": "end"
+                    },
+                    {
+                        "id": "edge_confirm_followup_3_fallback",
+                        "condition": "unclear",
+                        "transition_condition": {
+                            "type": "prompt",
+                            "prompt": "unclear"
+                        },
+                        "destination_node_id": "fallback"
+                    }
+                ],
+                "intent_triggers": [
+                    "confirm",
+                    "provide_info"
+                ]
+            },
+            {
+                "id": "end",
+                "name": "End",
+                "type": "end",
+                "instruction": {
+                    "type": "prompt",
+                    "text": "Follow the published Flow V2 node 'End' and keep the reply concise."
+                },
+                "response": "Thank you. Have a good day.",
+                "edges": [],
+                "intent_triggers": [
+                    "confirm",
+                    "deny"
+                ]
+            }
+        ]
+    },
+    "agent_metadata": {
+        "agent_type": "real_estate_sales",
+        "assigned_email": "test@example.com",
+        "client_id": "test-client"
+    },
+    "voice_id": "voice",
+    "provider_config": {
+        "stt_provider": "groq",
+        "tts_provider": "elevenlabs",
+        "cartesia_voice_id": "95d51f79-c397-46f9-b49a-23763d3eaa2d",
+        "parler_description": "",
+        "elevenlabs_voice_id": "6MoEUz34rbRrmmyxgRm4",
+        "elevenlabs_model": "eleven_multilingual_v2",
+        "elevenlabs_stability": 0.5,
+        "elevenlabs_similarity": 0.75,
+        "elevenlabs_style": 0.0,
+        "elevenlabs_speaker_boost": true
+    }
+}

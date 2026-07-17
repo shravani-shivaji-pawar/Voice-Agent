@@ -1,0 +1,599 @@
+{"timestamp": 1776352178.4358335, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776352178.441506, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776352184.0945234, "event": "user_reply", "content": "Gracias.", "node": "node-1767592854176"}
+{"timestamp": 1776352184.4639316, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776352186.1385722, "event": "user_reply", "content": "Bye.", "node": "node-1735264873079"}
+{"timestamp": 1776352186.380469, "event": "agent_reply", "content": "No problem.\nWhat would be a convenient time for me to call you back?", "node": "node-1736492391269"}
+{"timestamp": 1776352187.156605, "event": "user_reply", "content": "Uh,", "node": "node-1736492391269"}
+{"timestamp": 1776352187.3411179, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nThat's alright.", "node": "fallback_callback_time"}
+{"timestamp": 1776352239.9576325, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776352239.9631133, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776352241.2056544, "event": "user_reply", "content": "Bye.", "node": "node-1767592854176"}
+{"timestamp": 1776352241.4130356, "event": "agent_reply", "content": "Sorry about that.\nThank you for your time.", "node": "node-wrong-person-end"}
+{"timestamp": 1776352350.0703402, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776352350.0851612, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776352352.8090465, "event": "user_reply", "content": "Bye.", "node": "node-1767592854176"}
+{"timestamp": 1776352353.0344186, "event": "agent_reply", "content": "Sorry about that.\nThank you for your time.", "node": "node-wrong-person-end"}
+{"timestamp": 1776352374.4931242, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776352374.4994493, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776352398.9702947, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776352398.9769125, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776352434.5506985, "event": "user_reply", "content": "Yes, you are.", "node": "node-1767592854176"}
+{"timestamp": 1776352434.9021428, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776352469.8936799, "event": "user_reply", "content": "Y as\u00ed es ayudar.", "node": "node-1735264873079"}
+{"timestamp": 1776352470.2108872, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776434534.8987124, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776434534.9022028, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776434537.8832722, "event": "user_reply", "content": "It's perfect.", "node": "node-1767592854176"}
+{"timestamp": 1776434538.1908543, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776434542.9983342, "event": "user_reply", "content": "for music.", "node": "node-1735264873079"}
+{"timestamp": 1776434543.3012516, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776434568.9479437, "event": "user_reply", "content": "Yeah.", "node": "node-1735264921453"}
+{"timestamp": 1776434569.2207127, "event": "agent_reply", "content": "Just to confirm \u2014 Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776434584.9877195, "event": "user_reply", "content": "used to drop", "node": "node-1735264921453"}
+{"timestamp": 1776434585.3370874, "event": "agent_reply", "content": "Got it, just to clarify \u2014 No problem.\nAre you looking to buy, rent, or invest in a property?", "node": "fallback_intent"}
+{"timestamp": 1776434596.958377, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776434596.9604774, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776434635.1500218, "event": "user_reply", "content": "Amen.", "node": "node-1767592854176"}
+{"timestamp": 1776434635.418803, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776434638.3518739, "event": "user_reply", "content": "Yes you are.", "node": "node-1735264873079"}
+{"timestamp": 1776434638.6485894, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776434644.7691746, "event": "user_reply", "content": "Mm-hmm.", "node": "node-1735264921453"}
+{"timestamp": 1776434645.1506743, "event": "agent_reply", "content": "Got it, just to clarify \u2014 No problem.\nAre you looking to buy, rent, or invest in a property?", "node": "fallback_intent"}
+{"timestamp": 1776434647.9726212, "event": "user_reply", "content": "Obrigado.", "node": "fallback_intent"}
+{"timestamp": 1776434648.2357435, "event": "agent_reply", "content": "Got it, just to clarify \u2014 Just to confirm \u2014 No problem.\nAre you looking to buy, rent, or invest in a property?", "node": "fallback_intent"}
+{"timestamp": 1776434654.3923721, "event": "user_reply", "content": "as you are speaking", "node": "fallback_intent"}
+{"timestamp": 1776434654.6031697, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776434657.6005669, "event": "user_reply", "content": "King to Prashant.", "node": "node-1735264921453"}
+{"timestamp": 1776434657.79681, "event": "agent_reply", "content": "Sorry about that.\nThank you for your time.", "node": "node-wrong-person-end"}
+{"timestamp": 1776434670.4056664, "event": "user_reply", "content": "Amen.", "node": "node-wrong-person-end"}
+{"timestamp": 1776434673.621195, "event": "user_reply", "content": "Obrigado.", "node": "node-wrong-person-end"}
+{"timestamp": 1776435562.6752353, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776435562.6781888, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776435570.514029, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776435571.20763, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776435571.522662, "event": "user_reply", "content": "Yes, you are.", "node": "node-1735264873079"}
+{"timestamp": 1776435571.7444956, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776435572.022404, "event": "user_reply", "content": "Yeah.", "node": "node-1735264921453"}
+{"timestamp": 1776435572.2111757, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776435580.8220234, "event": "user_reply", "content": "Bye.", "node": "node-1735264921453"}
+{"timestamp": 1776435581.1469393, "event": "agent_reply", "content": "Thank you for your time.\nHave a great day.", "node": "node-1735969972303"}
+{"timestamp": 1776525804.3117137, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776525804.3154333, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776525809.3845325, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776525809.6334774, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776525812.8400688, "event": "user_reply", "content": "No, you're not.", "node": "node-1735264873079"}
+{"timestamp": 1776525813.2416728, "event": "agent_reply", "content": "Are you looking to buy, rent, or invest in a property?", "node": "node-1735264921453"}
+{"timestamp": 1776525817.7791479, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776525817.7825336, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776525819.4636292, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1735264921453"}
+{"timestamp": 1776525819.7801156, "event": "agent_reply", "content": "Got it, just to clarify \u2014 No problem.\nAre you looking to buy, rent, or invest in a property?", "node": "fallback_intent"}
+{"timestamp": 1776525825.05846, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776525825.0627391, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776525832.33382, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776525832.655326, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776525844.5724282, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776525844.5756648, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776525860.1502614, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776525860.153285, "event": "agent_reply", "content": "Hello, this is Neha from the Real Estate AI team. Am I speaking with Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776525867.2542026, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776525867.5474498, "event": "agent_reply", "content": "Is this a good time for a quick two-minute call about a property option?", "node": "node-1735264873079"}
+{"timestamp": 1776617453.0214365, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776617453.0273163, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776617464.2768703, "event": "user_reply", "content": "Yes.", "node": "node-1767592854176"}
+{"timestamp": 1776617464.7407842, "event": "agent_reply", "content": "Quick question \u2014 do you have two minutes right now?\nI came across something that might actually be relevant for you.", "node": "node-1735264873079"}
+{"timestamp": 1776617534.7598932, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776617534.764163, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776617549.494038, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776617549.500638, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776617565.2889104, "event": "user_reply", "content": "Yes.", "node": "node-1767592854176"}
+{"timestamp": 1776617565.5332966, "event": "agent_reply", "content": "Quick question \u2014 do you have two minutes right now?\nI came across something that might actually be relevant for you.", "node": "node-1735264873079"}
+{"timestamp": 1776618774.0685165, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776618774.0719702, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776618786.9423404, "event": "user_reply", "content": "Yes.", "node": "node-1767592854176"}
+{"timestamp": 1776618787.2902262, "event": "agent_reply", "content": "Quick question \u2014 do you have two minutes right now?\nI came across something that might actually be relevant for you.", "node": "node-1735264873079"}
+{"timestamp": 1776618788.0772479, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1735264873079"}
+{"timestamp": 1776618788.3268914, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Quick question \u2014 do you have two minutes right now?", "node": "node-1735264873079"}
+{"timestamp": 1776618791.5598853, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1735264873079"}
+{"timestamp": 1776618793.369948, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Quick question \u2014 do you have two minutes right now?", "node": "node-1735264873079"}
+{"timestamp": 1776618794.631893, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1735264873079"}
+{"timestamp": 1776618795.0583584, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Quick question \u2014 do you have two minutes right now?", "node": "node-1735264873079"}
+{"timestamp": 1776618799.7314246, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1735264873079"}
+{"timestamp": 1776618799.9872963, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Quick question \u2014 do you have two minutes right now?", "node": "node-1735264873079"}
+{"timestamp": 1776618802.9313905, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1735264873079"}
+{"timestamp": 1776618803.2492702, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Quick question \u2014 do you have two minutes right now?", "node": "node-1735264873079"}
+{"timestamp": 1776618812.0124347, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776618812.0158572, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776618826.213644, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776618826.4485872, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nHey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776618829.4173536, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776618829.8444874, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Hey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776619644.9610066, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776619644.9635284, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776619650.1247382, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776619650.4639797, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nHey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776619660.5478277, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776619660.5523999, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776619687.343054, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776619687.606778, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nHey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776619690.5521238, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776619690.7647965, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Hey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776699956.5793037, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776699956.5839827, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776699959.3592029, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776699960.3735168, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nHey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776699964.1072009, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776699964.3377585, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Hey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776699971.2520611, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776699972.7006567, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Hey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776699974.5047355, "event": "user_reply", "content": "MBC \ub274\uc2a4 \uae40\uc131\ud604\uc785\ub2c8\ub2e4.", "node": "node-1767592854176"}
+{"timestamp": 1776699974.8367698, "event": "agent_reply", "content": "Sorry, I didn't catch that.\nJust to confirm \u2014 Hey, this is Neha \u2014 I'm with the Real Estate team.", "node": "node-1767592854176"}
+{"timestamp": 1776700613.8138716, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776700613.8179054, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776700642.2349591, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776700642.2377298, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776706927.586663, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776706927.5898523, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776707253.8455355, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776707253.8484526, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776707274.5575502, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776707274.5616946, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776707282.1250346, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776707282.1289916, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776707288.2114356, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776707288.214655, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776707293.313518, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776707293.316438, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776709727.137014, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776709727.1406684, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776709876.3331401, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776709876.3371198, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776709978.9542146, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776709978.958439, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776710035.8069534, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776710035.810782, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776710054.872605, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776710054.8747444, "event": "agent_reply", "content": "Hey, this is Neha \u2014 I'm with the Real Estate team. Is this Prashant?", "node": "node-1767592854176"}
+{"timestamp": 1776798496.6612437, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798499.043705, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798501.3997285, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798503.7862935, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798900.4602442, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798902.805159, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798905.1625106, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798943.9955351, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798946.3580282, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798948.7249193, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798951.094581, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798954.1899474, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798957.2084095, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798960.192495, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798963.211105, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798966.1890173, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798969.2152355, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798972.2037396, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798975.2201529, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798978.1998038, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798981.2162676, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798984.2079775, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798987.2176642, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798990.1970463, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798993.215504, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798996.1908252, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776798999.220961, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799002.2035446, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799005.222316, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799008.195074, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799011.2053096, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799014.2062967, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799017.206247, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799020.199118, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799023.2163184, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799026.1978304, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799029.207622, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799032.1964972, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799035.2256298, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799038.2023606, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799041.2072177, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799044.1921887, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799047.2226734, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799050.202064, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799053.2164636, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799056.1895547, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799059.2118585, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799062.193305, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799065.2236736, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799068.2027514, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799071.2194817, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799074.193532, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799077.20804, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799080.2108607, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799083.206052, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799086.1932778, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799089.205008, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799092.197186, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799095.280284, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799098.2120295, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799101.27921, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799104.2050738, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799107.273819, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799110.2028704, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799113.2159576, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799116.2047606, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799119.2725503, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799122.2109559, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799125.2337525, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799128.2289338, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799131.2476418, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799134.2164028, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799137.2561243, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799140.2156312, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799143.247105, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799146.2299252, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799149.2480304, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799152.2250524, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799155.2456586, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799158.2205522, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799161.2506437, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799164.2162023, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799167.2401292, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799170.2244108, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799173.2424464, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799176.2130756, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799179.2470436, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799182.2282102, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799185.2376564, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799188.2331452, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799191.254107, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799194.2283523, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799197.2487578, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799200.230829, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799203.2418108, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799206.22352, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799209.2478335, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799212.2246277, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799215.2410102, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799218.2258165, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799221.255163, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799224.2405975, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799227.2475631, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799230.2211936, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799233.240306, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799236.2328742, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799239.2476904, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799242.2174642, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799245.2450433, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799248.2312841, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799251.2581427, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799254.2267833, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799257.2488256, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799260.2310743, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799263.262363, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799266.2248628, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799269.257043, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799272.2223935, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799275.2551847, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799278.2459238, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799281.2586122, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799284.2297692, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799287.282344, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799290.215594, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799293.2978876, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799296.232421, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799299.260731, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799302.2417293, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799305.2684753, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799308.250835, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799311.2704468, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799314.25148, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799317.2647557, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799320.247061, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799323.2684083, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776799384.2069657, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776839182.4522333, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776839250.5399523, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776839706.3912349, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776840029.0515242, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776867953.2178247, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776869856.1040716, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776871244.080135, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776874950.4460137, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776875684.1428452, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776876171.4786346, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776876832.1381316, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776878363.0124452, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776880742.2314801, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776881893.4113157, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776882101.615581, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776883707.4807265, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776956089.6142097, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776957299.8003485, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776959178.3143985, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776962479.6334915, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776963893.6134114, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776964014.7149131, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1776964770.6332557, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777037601.6742842, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777037819.1034505, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777039957.2746634, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777040993.0457108, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777041278.416217, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777041567.2755926, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777042790.4754725, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777044267.9228334, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777044287.5749445, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777044805.3354583, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777045560.649525, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777046132.8172064, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777046516.7703326, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777389662.1170769, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777400335.249454, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777401391.947351, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777402035.016931, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777570208.413562, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777573960.117285, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777574054.803585, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1777648840.209547, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1778599143.181759, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1778600431.8199801, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1778604962.5444748, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309681.873684, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309713.4255219, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309733.575716, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309775.8545291, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309788.391371, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309825.3705, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780309837.838976, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780310289.5814972, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780310358.31013, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780932936.88736, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780938036.865371, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780939769.153265, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780939779.423577, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780939785.8261702, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780939836.850433, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780939881.764747, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780940848.440545, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941247.534903, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941329.482568, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941355.044666, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941521.524087, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941544.826321, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941621.7280169, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780941677.5762, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780942353.32214, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780942415.3873081, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780945836.109059, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780945884.2880409, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1780948610.662379, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781023901.817488, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781023908.339919, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781023920.285954, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781024089.180264, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781026293.9703171, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781026395.668231, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781026800.626194, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781026858.9897962, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781028317.218324, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781029009.1387572, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781029426.575105, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781029483.6108859, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781030712.6867871, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781030796.489995, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781030903.7018728, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781030912.7651908, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781030915.698545, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781030927.3428211, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781031076.5506601, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781031108.716473, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781031126.509415, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781031451.469749, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781031472.985887, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781031872.224154, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781032084.829447, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781032204.37056, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781032834.556888, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781033412.3815129, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781033440.169584, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781033464.318896, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781101826.352213, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781104339.056746, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781104352.516104, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781106155.600487, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781106614.594284, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781107210.004549, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781107836.920222, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781107881.433724, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781107929.3900359, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781108043.619067, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781109153.03125, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781110049.762202, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781110113.0517619, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781110140.3858838, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781110256.859164, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781110277.9576802, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781110315.631983, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781115861.188339, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781115881.825644, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781115944.115983, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781117316.222469, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781188868.787967, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781189701.670701, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781192423.595048, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781192537.4158568, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781192543.0513668, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781365405.619092, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781365418.913145, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781366027.777018, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1781366053.409557, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782245220.2664642, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1782245423.3988285, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782310866.8744817, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782311027.1856923, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782311409.735862, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782311500.311348, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782320264.5932114, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782320303.889245, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782320396.7124178, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782320439.6365266, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782320496.0892398, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782321105.5835786, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782321140.9177818, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782493654.3203938, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782494516.7742224, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782494581.6752696, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495105.4134872, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495153.9367766, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495180.452875, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495191.7430892, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495395.686794, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495491.7888777, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495533.8263192, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782495861.0539753, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782501568.787536, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782501604.641218, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782501659.598321, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782501783.252238, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782502156.5333154, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782503525.9486926, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782507539.5596857, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782507602.8118434, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782507637.2877727, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508273.6002753, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508284.2973156, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508302.3565884, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508308.8141866, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508320.2865558, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508843.1217647, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508849.7529414, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782508863.7312238, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782568376.9878473, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782577649.5908065, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782578117.632821, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782584826.903008, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782584919.4314108, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782590045.8054173, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782590089.308307, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782590723.3063557, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782594740.2775545, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782594814.6275012, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782596982.4254332, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782597332.6883266, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782597388.9538555, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782597596.787371, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1782738615.0984268, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782739301.72498, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782739367.7530544, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782740952.5171063, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782740991.0547254, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782745834.577907, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782847382.5258331, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782913334.4074624, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782913420.4191813, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782913466.3835251, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782923096.5546057, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782925667.9854586, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782997820.8695323, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782997908.0006304, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782998340.1695056, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1782998864.4914417, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1783000652.2503378, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1783000694.0831156, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783000705.9854, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1783000739.742715, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1783017028.3545053, "event": "call_started", "start_node": "node-1767592854176"}
+{"timestamp": 1783017099.343489, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783018485.2075014, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783018606.8457298, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783019756.741742, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783019877.3124719, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783020132.4944363, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783020218.7672212, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783020224.2281895, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783020352.4975128, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783020418.6647723, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783103282.1147738, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783104237.3882918, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783104734.4526463, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783104836.9557307, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783105213.6878433, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783105478.3762016, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783106026.1572323, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783106071.9295986, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783106208.5968623, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783106259.3730567, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783171927.702843, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783172110.528114, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783172761.818581, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783172868.3292227, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783173249.9365973, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783173371.0230505, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783258520.9366634, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783259035.1298723, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783259065.4645991, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783356873.1509674, "event": "call_started", "start_node": "start"}
+{"timestamp": 1783356917.3941329, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783359170.3335848, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783359267.8705602, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783360680.7309592, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1783362773.399316, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784137936.0958662, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784142227.6935322, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784142386.3781295, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784142652.7434375, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784142953.6876485, "event": "call_started", "start_node": ""}
+{"timestamp": 1784142953.6896613, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784142953.691857, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784144278.3039846, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784145607.6597056, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784145823.9847739, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1784145970.3351254, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1784146177.7701259, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784146480.3535402, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784146554.5583932, "event": "call_started", "start_node": "root_greeting"}
+{"timestamp": 1784146663.067913, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784147133.7484508, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784147175.2947407, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784147283.2592902, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784147836.911843, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784189642.199118, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784189665.982173, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784189741.3236697, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784189756.9186642, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784191388.521579, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784192623.1729214, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784192690.6897597, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784193098.3382099, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784193124.1549318, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784193151.6723342, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784193187.5219052, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784193201.7295382, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784193259.729891, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784194281.7563477, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784194516.4220607, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784195614.571455, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784197448.896996, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784197629.1967514, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784197678.1115413, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784198549.8423228, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784198613.4632232, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784198763.4263055, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784198838.0615396, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784198910.4917376, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784199146.3736627, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784199276.161621, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784199360.9311683, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784199735.8937058, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784200049.108741, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784200161.0385044, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784200251.7743993, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784200332.0422742, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784209154.563046, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784209511.9523115, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784209774.0380123, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784211042.137264, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784211109.1878457, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784211238.1784616, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784211411.7447991, "event": "call_started", "start_node": "node-greeting"}
+{"timestamp": 1784211463.412431, "event": "call_started", "start_node": "start"}
+{"timestamp": 1784211473.5163999, "event": "call_started", "start_node": "node-greeting"}

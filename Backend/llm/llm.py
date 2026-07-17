@@ -1,0 +1,1094 @@
+"""LLM module — intent extraction only for the voice pipeline."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+import re
+import time
+from pathlib import Path
+from typing import Any, Optional
+
+from groq import AsyncGroq, APIError, APITimeoutError, RateLimitError
+
+from . import config as cfg
+from .state_manager import StateManager
+
+logger = logging.getLogger(__name__)
+
+if not cfg.GROQ_API_KEY:
+    raise EnvironmentError(
+        "GROQ_API_KEY is not set. "
+        "Run: $env:GROQ_API_KEY = 'your_key_here'  (PowerShell)\n"
+        "Or:  export GROQ_API_KEY='your_key_here'  (Linux/Mac)"
+    )
+
+_client = AsyncGroq(api_key=cfg.GROQ_API_KEY, timeout=cfg.REQUEST_TIMEOUT_S)
+
+
+def get_llm_client() -> AsyncGroq:
+    return _client
+
+KNOWN_INTENTS = [
+    "confirm_identity",
+    "confirm",
+    "deny",
+    "deny_identity",
+    "deny_interest",
+    "deny_time",
+    "deny_visit_time",
+    "provide_intent",
+    "provide_location",
+    "provide_budget",
+    "provide_property_type",
+    "provide_timeline",
+    "confirm_site_visit",
+    "deny_site_visit",
+    "provide_visit_datetime",
+    "ask_location_suggestion",
+    "ask_off_topic",
+    "unclear_intent",
+    "unclear_location",
+    "unclear_budget",
+    "unclear_property_type",
+    "unclear_visit_datetime",
+    "unclear_callback_time",
+    "unclear",
+    "user_question",
+    "suggest_time",
+    "confirm_availability",
+    "provide_info",
+]
+
+INTENT_EXTRACTION_SYSTEM_PROMPT = """You are an intent classifier for a real estate voice agent.
+
+Extract structured intent and entities from the user's message.
+You must NOT generate conversational replies.
+You only classify intent and extract entities for a JSON-driven state machine.
+Respond ONLY with a valid JSON object. No markdown. No explanation. No prose.
+
+Schema:
+{
+  "intent": "<exactly one intent from the list below>",
+  "entities": {
+    "location":      "<city or area name, or null>",
+    "budget":        "<number + unit e.g. 25 lakh, or null>",
+    "property_type": "<e.g. 2 BHK / villa / apartment, or null>",
+    "intent_value":  "<buy / rent / invest, or null>",
+    "callback_date": "<date or day e.g. tomorrow, next sunday, or null>",
+    "callback_time": "<time of day e.g. morning, 5 PM, evening, or null>",
+    "confirmation":  "<yes / no, or null>"
+  }
+}
+
+KNOWN_INTENTS: confirm_identity, confirm, deny, deny_identity, deny_interest,
+deny_time, deny_visit_time, provide_intent, provide_location,
+provide_budget, provide_property_type, provide_timeline, confirm_site_visit,
+deny_site_visit, provide_visit_datetime, ask_location_suggestion, ask_off_topic, unclear_intent,
+unclear_location, unclear_budget, unclear_property_type, unclear_visit_datetime,
+unclear_callback_time, unclear, user_question, suggest_time, confirm_availability
+
+Rules:
+- Choose the single most specific intent
+- The user may speak in English, Hindi, Hinglish, or Marathi. Understand romanized scripts too.
+- Extract `callback_date` and `callback_time` separately. If user says "tomorrow evening", extract BOTH.
+- Map natural Hindi/Hinglish/Marathi phrases to the same schema:
+  - "investment ke liye", "nivesh ke liye", "investment sathi" -> provide_intent with intent_value "invest"
+  - "khud ke liye", "apne liye", "rehne ke liye", "swatasathi", "swata sathi" -> provide_intent with intent_value "buy"
+  - "rent pe", "kiraye pe", "on rent", "bhadyane", "rent sathi" -> provide_intent with intent_value "rent"
+  - "budget 50 lakh", "50 lakh ke around", "mera budget 1 crore hai", "majha budget 50 lakh ahe" -> extract budget
+  - "haan", "ho", "ho chalel", "haa" -> intent: "confirm"
+  - "nahi", "nako", "nai" -> intent: "deny"
+- CRITICAL: "What about tomorrow?", "Tomorrow works", "Kal call karna", "Next week okay" -> intent: "suggest_time" (NOT deny, NOT deny_time)
+- CRITICAL: If user is asking a question (e.g., "What is it?", "Oh, what it is?", "Kya hai?", "What are you talking about?") -> intent: "user_question" (NOT deny_time, NOT deny)
+- CRITICAL: If user corrects and says "I have time", "I said I have time", "I am free" -> intent: "confirm_availability"
+- CRITICAL: If user mentions ANY city, place, or area (e.g., "Mumbai", "Delhi", "Koregaon Park", "anywhere"), you MUST extract it in `entities.location` and set intent to "provide_location". Do NOT use "unclear_location" if a place is named.
+- Confirmation words (yes, yeah, yep, correct, right, ok, okay, sure, go ahead) -> intent: "confirm"
+- Generic denial (no, nahi, nope, nah, not now, sorry no, no sorry) -> intent: "deny"
+- "wrong number", "wrong person", "not Prashant", "this is not" -> intent: "deny_identity"
+- "not interested", "no requirement", "don't need property", "not really" -> intent: "deny_interest"
+- "busy", "call later", "not now", "in a meeting", "busy right now" -> intent: "deny_time"
+- "not this weekend", "busy this week", "can't this week" -> intent: "deny_visit_time"
+- Location suggestion questions like "suggest", "recommend", "which area", "best location",
+  "good location", or "any options" -> intent: "ask_location_suggestion"
+- Do not label a suggestion question as "provide_location"
+- If the answer is uncertainty like "I don't know", "not sure", or "maybe", prefer a matching
+  unclear intent when the user is hesitating about intent, location, budget, property type,
+  site visit date/time, or callback time
+- Noise like "hmm", "uh", "ah", "ohh", ".", ",", "this", or "that" -> intent: "unclear"
+- All entity fields default to null if not present
+- CRITICAL: Never label a simple "No" or "No, sorry" as "unclear". These are "deny".
+- CRITICAL: "not really" or "no requirement" is "deny_interest"."""
+
+_EMPTY_INTENT = {"intent": "unclear", "entities": {}}
+
+_BUDGET_PATTERN = re.compile(
+    r"\b(?:budget|price|range|around|approx|approximately|mera budget|budget hai|budget is)?\s*"
+    r"(\d+(?:\.\d+)?)\s*(crore|crores|cr|lakh|lakhs|lac|lacs|thousand|k|करोड़|करोड|लाख|लख|हज़ार|हजार)\b",
+    re.IGNORECASE,
+)
+_BUY_HINTS = (
+    "buy", "buying", "looking to buy", "want to buy", "purchase", "purchasing",
+    "own house", "own home", "buy property", "looking for a property",
+    "looking to purchase", "planning to buy", "interested in buying",
+    "searching for property", "khud ke liye", "apne liye", "rehne ke liye",
+    "ghar ke liye", "for myself", "for self", "self use", "personal use",
+    "to live", "move in", "own use", "own flat",
+    "buy karna hai", "property buy karni hai", "ghar lena hai", "खरीदना",
+    "खरीदनी है", "घर लेना है", "फ्लैट लेना है"
+)
+_INVEST_HINTS = (
+    "invest", "investment", "investing", "property investment",
+    "investment purpose", "investor", "investment ke liye", "nivesh ke liye",
+    "return ke liye", "invest karna", "for investment", "roi", "rental income",
+    "invest karna hai", "निवेश", "इन्वेस्टमेंट"
+)
+_RENT_HINTS = (
+    "rent", "renting", "lease", "looking for rental", "looking to rent",
+    "need a rental property", "rent a flat", "rent pe", "kiraye pe", "kiraya",
+    "on rent", "rent ke liye", "for rent", "to rent", "किराए पर", "किराए के लिए",
+    "rent par"
+)
+_LOCATION_SUGGESTION_HINTS = (
+    "suggest city", "suggest cities", "suggest me city", "suggest me cities",
+    "suggest area", "suggest areas", "recommend city", "recommend cities",
+    "recommend area", "recommend areas", "which city", "which area",
+    "best city", "best cities", "best area", "best location", "good location",
+    "any options", "available options",
+)
+_PURPOSE_QUESTION_HINTS = (
+    "what is it", "what is this", "what's it", "whats it",
+    "what is this about", "what's this about", "whats this about",
+    "what are you talking about", "why are you calling", "why did you call",
+    "purpose of call", "reason for call", "kya hai", "kis baare",
+)
+_CONFIRMATION_TEXTS = {
+    "yes", "yeah", "yep", "yup", "ok", "okay", "sure", "go ahead",
+    "tell me", "go on", "continue", "haan", "han", "ji", "theek hai",
+}
+_DENIAL_TEXTS = {"no", "nope", "nah", "nahi", "nai", "na", "nako"}
+_BUSY_HINTS = (
+    "busy", "call later", "call me later", "not now", "in a meeting",
+    "cant talk", "can't talk", "driving", "not a good time",
+)
+_NOT_INTERESTED_HINTS = (
+    "not interested", "not looking", "no requirement", "dont need", "don't need",
+)
+_WRONG_PERSON_HINTS = ("wrong number", "wrong person", "not prashant", "this is not")
+
+
+def _normalize_budget_unit(unit: str) -> str:
+    unit = unit.lower()
+    if unit in {"crores", "cr", "करोड़", "करोड"}:
+        return "crore"
+    if unit in {"lakhs", "lac", "lacs", "लाख", "लख"}:
+        return "lakh"
+    if unit in {"k", "हज़ार", "हजार"}:
+        return "thousand"
+    return unit
+
+
+def _extract_budget_entity(user_text: str) -> str | None:
+    match = _BUDGET_PATTERN.search(user_text or "")
+    if not match:
+        return None
+    number = match.group(1)
+    unit = _normalize_budget_unit(match.group(2))
+    return f"{number} {unit}"
+
+
+def _classify_local_intent(user_text: str) -> dict[str, Any] | None:
+    clean_text = re.sub(r"[^\w\s'?]", " ", (user_text or "").strip().lower())
+    clean_text = re.sub(r"\s+", " ", clean_text).strip()
+    if not clean_text:
+        return None
+
+    entities: dict[str, Any] = {
+        "location": None,
+        "budget": None,
+        "property_type": None,
+        "intent_value": None,
+        "timeline": None,
+        "confirmation": None,
+    }
+
+    if any(phrase in clean_text for phrase in _PURPOSE_QUESTION_HINTS):
+        return {"intent": "user_question", "entities": entities}
+    has_location_suggestion = any(phrase in clean_text for phrase in _LOCATION_SUGGESTION_HINTS)
+    has_location_suggestion = has_location_suggestion or (
+        ("suggest" in clean_text or "recommend" in clean_text)
+        and any(word in clean_text.split() for word in {"city", "cities", "area", "areas", "location", "locations"})
+    )
+    if has_location_suggestion:
+        return {"intent": "ask_location_suggestion", "entities": entities}
+
+    # Check for direct city/location matches (local preprocessing bypass)
+    _LOCAL_LOCATIONS_MAP = {
+        "Jaipur": ["jaipur", "जयपुर", "जयपूर", "उजए पूर", "उजएपुर", "उजयपूर", "उदयपुर", "udaypur", "udaipur", "ujae pur", "ujaepur", "ujae poor", "ujaepoor"],
+        "Gurgaon": ["gurgaon", "gurugram", "गुड़गांव", "गुड़गांव", "गुरुग्राम", "गुड़गाँव", "gurgao", "gurgoan"],
+        "Zirakpur": ["zirakpur", "जीरकपुर", "झिरकपुर", "zirak", "jirakpur", "zirakhpur", "zirak pur"],
+        "Mathura": ["mathura", "मथुरा", "वृंदावन", "वृन्दावन", "vrindavan", "vrindaban", "vindravan"]
+    }
+    matching_text = re.sub(r'[.?।!,;]', '', user_text.lower()).strip()
+    matching_words = matching_text.split()
+    matched_loc = None
+    for canonical_loc, variants in _LOCAL_LOCATIONS_MAP.items():
+        for variant in variants:
+            if variant in matching_text or any(variant == w for w in matching_words):
+                matched_loc = canonical_loc
+                break
+        if matched_loc:
+            break
+            
+    if matched_loc:
+        entities["location"] = matched_loc
+        budget = _extract_budget_entity(user_text)
+        if budget:
+            entities["budget"] = budget
+        return {"intent": "provide_location", "entities": entities}
+
+    if any(phrase in clean_text for phrase in _WRONG_PERSON_HINTS):
+        return {"intent": "deny_identity", "entities": entities}
+    if any(phrase in clean_text for phrase in _NOT_INTERESTED_HINTS):
+        return {"intent": "deny_interest", "entities": entities}
+    if any(phrase in clean_text for phrase in _BUSY_HINTS):
+        return {"intent": "deny_time", "entities": entities}
+
+    # We no longer short-circuit buy/rent/invest here so that the LLM can extract
+    # other entities like location and property_type from the same utterance.
+    # Deterministic enforcement is handled in _enrich_intent_entities.
+
+    if clean_text in _CONFIRMATION_TEXTS:
+        entities["confirmation"] = "yes"
+        return {"intent": "confirm", "entities": entities}
+    if clean_text in _DENIAL_TEXTS:
+        entities["confirmation"] = "no"
+        return {"intent": "deny", "entities": entities}
+
+    return None
+
+
+def _enrich_intent_entities(user_text: str, intent: str, entities: dict[str, Any], state_manager: Optional[StateManager] = None) -> tuple[str, dict[str, Any]]:
+    clean_text = (user_text or "").strip().lower()
+    entities = dict(entities)
+
+    has_budget_field = "budget" in entities or (state_manager and "budget" in state_manager.extraction_fields)
+    if has_budget_field and not entities.get("budget"):
+        budget = _extract_budget_entity(user_text)
+        if budget:
+            entities["budget"] = budget
+            if intent == "unclear":
+                intent = "provide_budget"
+
+    # Deterministic location fallback
+    has_location_field = "location" in entities or (state_manager and "location" in state_manager.extraction_fields)
+    if has_location_field and not entities.get("location"):
+        _COMMON_LOCATIONS_MAP = {
+            "Mumbai": ["mumbai", "मुंबई", "bombay", "mumbai mein"],
+            "Pune": ["pune", "पुणे"],
+            "Bangalore": ["bangalore", "bengaluru", "बैंगलोर", "बेंगलुरु"],
+            "Chennai": ["chennai", "चेन्नई"],
+            "Delhi": ["delhi", "new delhi", "दिल्ली"],
+            "Noida": ["noida", "नोएडा"],
+            "Gurgaon": ["gurgaon", "gurugram", "गुड़गांव", "गुरुग्राम", "gurgaon mein", "gurgaon me"],
+            "Jaipur": ["jaipur", "जयपुर", "जयपूर", "जय पूर", "उजए पूर", "उजएपुर", "उदयपुर", "udaypur", "jaipur mein", "jaipur me", "जईपूर", "जईफूर्ट"],
+            "Zirakpur": ["zirakpur", "जीरकपुर", "झिरकपुर", "zirakpur mein", "zirakpur me"],
+            "Mathura": ["mathura", "मथुरा", "वृंदावन", "vrindavan", "mathura mein", "mathura me", "vrindavan mein", "vrindavan me"],
+            "Hyderabad": ["hyderabad", "हैदराबाद"],
+            "Kolkata": ["kolkata", "calcutta", "कोलकाता"],
+            "Pune": ["pune", "पुणे", "पुने", "पूने", "पून", "pune mein", "pune me"],
+            "Ahmedabad": ["ahmedabad", "अहमदाबाद"],
+            "Andheri": ["andheri", "अंधेरी"],
+            "Bandra": ["bandra", "बांद्रा"],
+            "Wakad": ["wakad", "वाकड", "वाकड़"],
+            "Baner": ["baner", "बानेर"],
+            "Hinjewadi": ["hinjewadi", "हिंजेवाड़ी", "हिंजवडी"],
+            "Whitefield": ["whitefield", "व्हाइटफील्ड"],
+            "Koregaon Park": ["koregaon park", "कोरेगांव पार्क"],
+            "Kharadi": ["kharadi", "खराड़ी"],
+            "Viman Nagar": ["viman nagar", "विमान नगर"],
+            "Kalyani Nagar": ["kalyani nagar", "कल्याणी नगर"],
+            "Magarpatta": ["magarpatta", "मगरपट्टा"],
+            "Hadapsar": ["hadapsar", "हड़पसर"],
+            "Bavdhan": ["bavdhan", "बावधान"],
+            "Pimple Saudagar": ["pimple saudagar", "पिम्पल सौदागर"],
+            "Powai": ["powai", "पवई"],
+            "Malad": ["malad", "मलाड"],
+            "Goregaon": ["goregaon", "गोरेगांव"],
+            "Thane": ["thane", "ठाणे"],
+            "Navi Mumbai": ["navi mumbai", "नवी मुंबई"],
+            "Panvel": ["panvel", "पनवेल"]
+        }
+        # Match locations in text
+        for canonical_loc, variants in _COMMON_LOCATIONS_MAP.items():
+            for variant in variants:
+                # Use simple 'in' to handle both english and devanagari without boundary issues
+                if variant in clean_text:
+                    entities["location"] = canonical_loc
+                    if intent in {"unclear", "provide_info"}:
+                        intent = "provide_location"
+                    break
+            if entities.get("location"):
+                break
+
+    has_intent_field = "intent_value" in entities or (state_manager and "intent_value" in state_manager.extraction_fields)
+    if has_intent_field:
+        has_buy = any(phrase in clean_text for phrase in _BUY_HINTS) or "buy" in clean_text.split()
+        has_invest = any(phrase in clean_text for phrase in _INVEST_HINTS)
+        has_rent = any(phrase in clean_text for phrase in _RENT_HINTS) or "rent" in clean_text.split()
+
+        if has_buy:
+            entities["intent_value"] = "buy"
+            if intent not in {"confirm", "deny", "deny_interest", "deny_time", "deny_identity", "deny_visit_time"}:
+                intent = "provide_intent"
+        elif has_invest:
+            entities["intent_value"] = "invest"
+            if intent not in {"confirm", "deny", "deny_interest", "deny_time", "deny_identity", "deny_visit_time"}:
+                intent = "provide_intent"
+        elif has_rent:
+            entities["intent_value"] = "rent"
+            if intent not in {"confirm", "deny", "deny_interest", "deny_time", "deny_identity", "deny_visit_time"}:
+                intent = "provide_intent"
+
+        # Always enforce intent=provide_intent if intent_value was successfully assigned by LLM or overrides
+        # but the intent itself was marked as unclear.
+        if entities.get("intent_value") in {"buy", "rent", "invest"} and intent not in {"confirm", "deny", "deny_interest", "deny_time", "deny_identity", "deny_visit_time"}:
+            intent = "provide_intent"
+
+    # Promote unclear/provide_info intent to specific slot-filling intent if entities are populated
+    if intent in {"unclear", "provide_info"}:
+        if entities.get("location"):
+            intent = "provide_location"
+        elif entities.get("budget"):
+            intent = "provide_budget"
+        elif entities.get("intent_value"):
+            intent = "provide_intent"
+
+    return intent, entities
+
+
+async def _async_call_groq_api(
+    messages: list[dict[str, str]],
+    *,
+    max_tokens: int,
+    temperature: float,
+    response_format: Optional[dict[str, str]] = None,
+) -> str:
+    """Call Groq with retry + exponential backoff. Returns raw content string.
+
+    Issue 13 fix: backoff uses asyncio.sleep instead of time.sleep to avoid blocking worker threads.
+    """
+    import random as _random
+    for attempt in range(1, cfg.MAX_RETRIES + 1):
+        try:
+            t0 = time.time()
+            completion = await _client.chat.completions.create(
+                model=cfg.MODEL_NAME,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                top_p=cfg.TOP_P,
+                response_format=response_format,
+            )
+            latency = time.time() - t0
+            logger.info("LLM request completed in %.3fs (attempt %d/%d)", latency, attempt, cfg.MAX_RETRIES)
+            return completion.choices[0].message.content or ""
+        except RateLimitError:
+            wait = (2 ** attempt) + _random.uniform(0, 0.5)   # jitter
+            logger.warning("Groq rate limit hit (attempt %d/%d) — retrying in %.1fs", attempt, cfg.MAX_RETRIES, wait)
+            if attempt < cfg.MAX_RETRIES:
+                await asyncio.sleep(wait)
+        except APITimeoutError:
+            logger.error("Groq request timed out (attempt %d/%d)", attempt, cfg.MAX_RETRIES)
+            if attempt == cfg.MAX_RETRIES:
+                return ""
+            await asyncio.sleep(1.0)
+        except APIError as exc:
+            logger.error("Groq API error (attempt %d/%d): %s", attempt, cfg.MAX_RETRIES, exc)
+            return ""
+    return ""
+
+
+async def extract_intent(user_text: str, state_manager: Optional[StateManager] = None) -> dict[str, Any]:
+    """
+    Call Groq API for intent + entity extraction.
+    Returns: {"intent": str, "entities": dict}
+    Returns: {"intent": "unclear", "entities": {}} on any failure — never raises.
+    """
+    if not user_text or not user_text.strip():
+        return dict(_EMPTY_INTENT)
+
+    local_intent = _classify_local_intent(user_text)
+    if local_intent:
+        return local_intent
+
+    system_prompt = INTENT_EXTRACTION_SYSTEM_PROMPT
+    if state_manager:
+        agent_name = state_manager.schema.get("agent_name", "Agent")
+        global_prompt = state_manager.global_prompt or state_manager.schema.get("global_prompt") or "You are a helpful AI assistant."
+        current_node = state_manager.get_current_node()
+        current_node_name = current_node.get("name", "Greeting") if current_node else "Greeting"
+        
+        current_node_instruction = ""
+        if current_node:
+            instr = current_node.get("instruction", {})
+            if isinstance(instr, dict):
+                current_node_instruction = instr.get("text", "")
+            elif isinstance(instr, str):
+                current_node_instruction = instr
+
+        fields = list(state_manager.extraction_fields)
+        fields_desc = "\n".join(f"    \"{f}\": \"<value or null>\"" for f in fields)
+        
+        system_prompt = f"""You are an intent classifier and entity extractor for a voice agent named {agent_name}.
+The agent's script and role:
+{global_prompt}
+
+Current state of the conversation:
+- Node name: {current_node_name}
+- Goal/Instruction: {current_node_instruction}
+
+Your task is to classify the user's message and extract entities.
+You must NOT generate conversational replies.
+Respond ONLY with a valid JSON object. No markdown. No explanation. No prose.
+
+JSON Schema:
+{{
+  "intent": "<the single most specific intent from the list of KNOWN_INTENTS>",
+  "entities": {{
+{fields_desc}
+  }}
+}}
+
+KNOWN_INTENTS:
+- confirm: agreement, yes, haan, correct, sure
+- deny: disagreement, no, nahi, nako, incorrect
+- deny_identity: wrong number, wrong person, "not [Name]"
+- deny_interest: not interested, no requirement, no need
+- deny_time: busy, call later, not now, in a meeting
+- suggest_time: user suggests a specific date/time for callback or visit (e.g., "call tomorrow", "what about evening?")
+- confirm_availability: user corrects or says they are free / have time
+- user_question: user asks a question about the agent's identity, purpose, or is confused (e.g. "who is this?", "kya hai?", "why are you calling?")
+- unclear: noise, hesitation, or unrecognizable input (e.g. "hmm", "uh", "let me think")
+- provide_info: user provides details corresponding to the extraction fields (e.g. stating their location, budget, experience, symptoms, etc.)
+
+Rules:
+1. Choose the single most specific intent. If the user provides information matching any of the fields, classify as "provide_info" unless they are denying or requesting a callback.
+2. The user may speak in English, Hindi, Hinglish, or Marathi. Understand romanized scripts and transliterations.
+3. Extract the exact value for any fields mentioned. Default to null if not present in the user's utterance.
+"""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_text.strip()},
+    ]
+    raw_content = await _async_call_groq_api(
+        messages,
+        max_tokens=80,
+        temperature=0.0,
+        response_format={"type": "json_object"},
+    )
+    if not raw_content:
+        data = dict(_EMPTY_INTENT)
+    else:
+        try:
+            data = json.loads(raw_content)
+        except json.JSONDecodeError:
+            logger.error("[LLM] JSON parse failed")
+            data = dict(_EMPTY_INTENT)
+
+    entities = data.get("entities")
+    if not isinstance(entities, dict):
+        entities = {}
+
+    normalized_entities = {}
+    if state_manager:
+        for f in state_manager.extraction_fields:
+            normalized_entities[f] = entities.get(f)
+            
+    for k in ["location", "budget", "property_type", "intent_value", "timeline", "confirmation"]:
+        if k not in normalized_entities:
+            normalized_entities[k] = entities.get(k)
+
+    intent = str(data.get("intent") or "unclear").strip()
+    if intent not in KNOWN_INTENTS:
+        intent = "unclear"
+
+    intent, normalized_entities = _enrich_intent_entities(user_text, intent, normalized_entities, state_manager=state_manager)
+    return {"intent": intent, "entities": normalized_entities}
+
+
+# ---------------------------------------------------------------------------
+# Phrase-constrained LLM response — called ONLY when no JSON node matches
+# ---------------------------------------------------------------------------
+
+def _load_prompt_rules() -> str:
+    """Load behavioral rules from prompt.txt once at module init."""
+    prompt_path = Path(__file__).resolve().parent / "prompt.txt"
+    try:
+        return prompt_path.read_text(encoding="utf-8").strip()
+    except Exception as exc:
+        logger.warning("Could not load prompt.txt: %s", exc)
+        return ""
+
+
+_PROMPT_RULES: str = _load_prompt_rules()
+
+_STATIC_FALLBACK = (
+    "That's a great question. Let me continue with a few details to help you better."
+)
+
+
+def _build_phrase_constrained_system(phrase_bank: list[str]) -> str:
+    """
+    Build a system prompt that constrains the LLM to compose responses
+    using ONLY phrases from the approved phrase bank.
+    """
+    bank_text = "\n".join(f"- {p}" for p in phrase_bank)
+    system = (
+        "You are Neha — a sharp, emotionally intelligent real estate expert on a phone call.\n"
+        "You speak like a high-performing human, not a script. Adapt your tone to the user's mood.\n\n"
+        "## RESPONSE CONSTRUCTION RULES\n"
+        "You MUST construct your response using ONLY words, phrases, and sentences "
+        "from the PHRASE BANK below.\n"
+        "You may slightly modify grammar to make the response natural.\n"
+        "You must NOT introduce new claims, facts, or sales statements not present "
+        "in the PHRASE BANK.\n"
+        "You must NOT change the meaning of any business messaging.\n\n"
+        "## COMPOSITION RULES\n"
+        "- Maximum 2 sentences per response\n"
+        "- Maximum 25 words per sentence\n"
+        "- Do NOT ask any question — the system will ask the next question automatically\n"
+        "- Do NOT collect information like location, budget, or property type\n"
+        "- Plain text only. No JSON. No markdown.\n"
+        "- Conversational, human tone — never robotic or scripted\n"
+        "- No filler words like 'Certainly', 'Understood', 'Wonderful'\n\n"
+        f"## PHRASE BANK\n{bank_text}\n"
+    )
+    if _PROMPT_RULES:
+        system += "\n## ADDITIONAL RULES\n" + _PROMPT_RULES
+    return system
+
+
+def generate_phrase_constrained_response(user_text: str, context: dict) -> str:
+    """
+    Generate a short response for off-topic or clarification questions,
+    constrained to use phrases from the JSON conversation file's phrase bank.
+
+    Called ONLY when _is_informational_query() returns True in state_manager.
+
+    Constraints:
+    - Response composed from approved phrase bank entries
+    - Maximum 2 sentences, 25 words per sentence
+    - Neutral, factual tone — not a sales pitch
+    - Must NOT ask a new question (JSON node handles the next question)
+    - Must NOT collect slot values (location, budget, etc.)
+    - Plain text only — no JSON, no markdown
+    - Falls back to _STATIC_FALLBACK on API failure — never raises
+
+    Settings: max_tokens=cfg.PHRASE_RESPONSE_MAX_TOKENS,
+              temperature=cfg.PHRASE_RESPONSE_TEMPERATURE
+    """
+    from .state_manager import get_phrase_bank
+    phrase_bank = get_phrase_bank()
+
+    system_prompt = _build_phrase_constrained_system(phrase_bank)
+
+    prompt = (
+        f'User asked: "{user_text}"\n'
+        f"Context: {context}\n"
+        "Compose a brief response using ONLY phrases from the PHRASE BANK. "
+        "Do not invent new statements."
+    )
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt},
+    ]
+
+    logger.info("[LLM REASONING] Generating phrase-constrained response for: \"%s\"", user_text)
+
+    try:
+        raw = asyncio.run(_async_call_groq_api(
+            messages,
+            max_tokens=cfg.PHRASE_RESPONSE_MAX_TOKENS,
+            temperature=cfg.PHRASE_RESPONSE_TEMPERATURE,
+        ))
+    except Exception as exc:
+        logger.error("[LLM FALLBACK] API error — using static fallback: %s", exc)
+        return _STATIC_FALLBACK
+
+    if not raw or not raw.strip():
+        return _STATIC_FALLBACK
+
+    # Strip trailing question marks — JSON node owns the next question
+    reply = raw.strip().rstrip("?").rstrip()
+    if not reply:
+        return _STATIC_FALLBACK
+
+    # Log phrase matching
+    from .state_manager import _match_phrases_used, _PHRASE_BANK
+    matched = _match_phrases_used(reply, _PHRASE_BANK)
+    if matched:
+        logger.info("[JSON PHRASES USED] %s", "; ".join(f'"{p}"' for p in matched[:5]))
+    logger.info("[FINAL RESPONSE] \"%s\"", reply)
+
+    return reply
+
+
+# Keep old name as alias for backward compatibility
+generate_informational_response = generate_phrase_constrained_response
+
+
+def _extract_summary_from_prompt(global_prompt: str) -> str:
+    """Extract complete company knowledge summary from global prompt template."""
+    match = re.search(r"Complete Company Knowledge Summary:\n(.*)", global_prompt, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return global_prompt
+
+
+async def _classify_message(
+    user_text: str,
+    current_node: Optional[dict[str, Any]],
+    language: str,
+) -> str:
+    """Classify user text as node_response, company_question, general_query, small_talk, or unknown."""
+    node_info = ""
+    if current_node:
+        node_response = current_node.get("response") or ""
+        node_instruction = (current_node.get("instruction") or {}).get("text") or ""
+        node_info = (
+            f"Active Node Name: {current_node.get('name')}\n"
+            f"Active Node Question/Prompt: {node_response}\n"
+            f"Active Node Goal: {node_instruction}\n"
+            f"Expected Slots to fill: {current_node.get('collects', [])}"
+        )
+    
+    system_prompt = (
+        "You are an expert intent classifier for a voice calling assistant.\n"
+        "Analyze the user's message and the active node's context, and classify the user's intent into exactly one of these categories:\n\n"
+        "1. \"node_response\": The user is answering the active node's question or providing details (like location, budget, name, availability, or preferences) related to the current sales/advisory flow.\n"
+        "2. \"company_question\": The user is asking a factual question about the company itself, its products, services, CEO, founders, office location, contact info, support/helpdesk, pricing details, or general capabilities.\n"
+        "3. \"general_query\": A standard conversational greeting, acknowledgment, or simple polite phrase (e.g. 'hello', 'ok', 'yes', 'no problem', 'thanks').\n"
+        "4. \"small_talk\": Conversational chitchat unrelated to the company or current flow (e.g., 'how are you', 'what is your name', 'are you a robot').\n"
+        "5. \"unknown\": The user's input is garbled, unclear, or does not fit any of the above categories.\n\n"
+        "Format your response as a valid JSON object matching this schema:\n"
+        "{\n"
+        "  \"classification\": \"node_response\" | \"company_question\" | \"general_query\" | \"small_talk\" | \"unknown\",\n"
+        "  \"reason\": \"A brief explanation of why this classification was chosen.\"\n"
+        "}"
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": (
+            f"Active Node Context:\n{node_info}\n\n"
+            f"User Message: \"{user_text}\"\n"
+            f"Language: {language}"
+        )}
+    ]
+
+    try:
+        completion = await _client.chat.completions.create(
+            model=cfg.MODEL_NAME,
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=0.0,
+            max_tokens=100
+        )
+        raw_res = completion.choices[0].message.content or ""
+        res_data = json.loads(raw_res)
+        val = str(res_data.get("classification") or "node_response").strip().lower()
+        if val in {"node_response", "company_question", "general_query", "small_talk", "unknown"}:
+            return val
+        return "node_response"
+    except Exception as exc:
+        logger.warning("Failed to classify user message: %s", exc)
+        return "node_response"
+
+
+def _pure_python_tfidf_similarity(query: str, docs: list[str]) -> list[float]:
+    """Calculate TF-IDF Cosine Similarity in pure python. No sklearn needed!"""
+    import math
+    from collections import Counter
+    
+    def tokenize(text: str) -> list[str]:
+        return re.findall(r'\b\w+\b', text.lower())
+
+    query_tokens = tokenize(query)
+    doc_tokens_list = [tokenize(d) for d in docs]
+    
+    all_terms = set(query_tokens)
+    for doc_tokens in doc_tokens_list:
+        all_terms.update(doc_tokens)
+        
+    df = {}
+    N = len(docs)
+    for term in all_terms:
+        df[term] = sum(1 for doc_tokens in doc_tokens_list if term in doc_tokens)
+        
+    idf = {}
+    for term, doc_count in df.items():
+        idf[term] = math.log((1 + N) / (1 + doc_count)) + 1.0
+
+    doc_vectors = []
+    for doc_tokens in doc_tokens_list:
+        tf = Counter(doc_tokens)
+        vec = {}
+        for term in all_terms:
+            if term in tf:
+                vec[term] = tf[term] * idf[term]
+        doc_vectors.append(vec)
+        
+    q_tf = Counter(query_tokens)
+    q_vec = {}
+    for term in all_terms:
+        if term in q_tf:
+            q_vec[term] = q_tf[term] * idf[term]
+            
+    def magnitude(vec: dict[str, float]) -> float:
+        return math.sqrt(sum(v*v for v in vec.values()))
+        
+    q_mag = magnitude(q_vec)
+    if q_mag == 0:
+        return [0.0] * N
+        
+    similarities = []
+    for d_vec in doc_vectors:
+        d_mag = magnitude(d_vec)
+        if d_mag == 0:
+            similarities.append(0.0)
+            continue
+        dot_product = sum(q_vec.get(term, 0.0) * d_vec.get(term, 0.0) for term in q_vec)
+        similarities.append(dot_product / (q_mag * d_mag))
+        
+    return similarities
+
+
+def _retrieve_semantic_chunks_tfidf(query: str, summary_markdown: str) -> tuple[list[str], list[str], list[float]]:
+    """Parse Markdown by H2 headers and use scikit-learn or pure python TF-IDF Cosine Similarity to retrieve chunks."""
+    if not summary_markdown or not summary_markdown.strip():
+        return [], [], []
+
+    sections = re.split(r'\n(?=## )', "\n" + summary_markdown.strip())
+    sections = [s.strip() for s in sections if s.strip()]
+    if not sections:
+        return [], [], []
+
+    SYNONYMS = {
+        "support": ["customer care", "helpdesk", "contact", "support", "complaint", "phone", "email", "address", "office", "location", "reach", "hours"],
+        "contact": ["phone", "email", "address", "office", "location", "reach", "contact", "connect", "call", "map", "hours"],
+        "ceo": ["ceo", "founder", "leadership", "owner", "president", "chief executive", "management", "head", "team"],
+        "founder": ["ceo", "founder", "leadership", "owner", "president", "chief executive", "management", "head", "team"],
+        "product": ["product", "project", "apartment", "flat", "villa", "plot", "pricing", "price", "cost", "offer", "luxury", "amenities", "rera"],
+        "pricing": ["price", "cost", "pricing", "rate", "fee", "payment", "subscription", "offer", "discount"],
+        "feature": ["feature", "amenity", "amenities", "specifications", "benefits", "technologies"],
+        "security": ["security", "compliance", "privacy", "gdpr", "safe", "data protection"],
+        "careers": ["careers", "job", "hiring", "culture", "employee", "work"],
+        "headquarters": ["headquarters", "hq", "corporate office", "office", "location", "address", "contact"],
+        "unique": ["unique", "differentiator", "why choose", "mission", "vision", "values", "core values", "advantages"],
+    }
+
+    query_words = re.findall(r'\b\w+\b', query.lower())
+    expanded_words = set(query_words)
+    for word in query_words:
+        if word in SYNONYMS:
+            expanded_words.update(SYNONYMS[word])
+    expanded_query = " ".join(expanded_words)
+
+    # Try sklearn TfidfVectorizer
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+        
+        vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform(sections)
+        query_vec = vectorizer.transform([expanded_query])
+        
+        similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
+    except Exception as exc:
+        similarities = _pure_python_tfidf_similarity(expanded_query, sections)
+
+    scored_sections = []
+    for idx, score in enumerate(similarities):
+        if score > 0.05:  # Similarity threshold
+            sec = sections[idx]
+            lines = sec.split("\n")
+            heading = lines[0].replace("#", "").strip() if lines else "Section"
+            scored_sections.append((float(score), heading, sec))
+
+    scored_sections.sort(key=lambda x: x[0], reverse=True)
+    top_sections = scored_sections[:3]
+
+    headings = [heading for score, heading, sec in top_sections]
+    chunks = [sec for score, heading, sec in top_sections]
+    scores = [score for score, heading, sec in top_sections]
+
+    if not chunks and sections:
+        for idx, sec in enumerate(sections):
+            lines = sec.split("\n")
+            heading = lines[0].replace("#", "").strip() if lines else "Section"
+            if "overview" in heading.lower() or "about" in heading.lower():
+                return [heading], [sec], [1.0]
+        first_lines = sections[0].split("\n")
+        first_heading = first_lines[0].replace("#", "").strip() if first_lines else "Overview"
+        return [first_heading], [sections[0]], [1.0]
+
+    return headings, chunks, scores
+
+
+def _search_json_knowledge(user_text: str, nodes: list[dict[str, Any]]) -> Optional[str]:
+    """Check if the user's query can be answered directly by the predefined JSON nodes/phrases."""
+    query_clean = user_text.lower().strip().rstrip("?").strip()
+    for node in nodes:
+        node_name = (node.get("name") or "").lower()
+        node_resp = (node.get("response") or "").lower()
+        if "ceo" in query_clean and "ceo" in node_name:
+            if node.get("response"):
+                return node.get("response")
+        if "headquarters" in query_clean or "hq" in query_clean or "office" in query_clean:
+            if "office" in node_name or "headquarter" in node_name:
+                if node.get("response"):
+                    return node.get("response")
+        if "support" in query_clean or "contact" in query_clean or "help" in query_clean:
+            if "support" in node_name or "contact" in node_name:
+                if node.get("response"):
+                    return node.get("response")
+    for node in nodes:
+        node_name = (node.get("name") or "").lower()
+        if node_name and node_name in query_clean:
+            if node.get("response"):
+                return node.get("response")
+    return None
+
+
+async def _generate_answer_from_chunks(
+    user_text: str,
+    chunks: list[str],
+    language: str,
+) -> str:
+    """Ask LLM to format a concise, conversational answer based ONLY on the retrieved summary chunks."""
+    system_prompt = (
+        "You are a factual, concise customer advisory voice assistant.\n"
+        "Your task is to answer the user's question about the company using ONLY the retrieved facts below.\n\n"
+        "Retrieved Company Knowledge Base Chunks:\n"
+        f"{chr(10).join(chunks)}\n\n"
+        "Constraints:\n"
+        "- Answer the question directly in a friendly, professional voice.\n"
+        "- Max 2 sentences, 20-30 words.\n"
+        "- Do not ask any follow-up questions in this response.\n"
+        "- Do not assume, guess, invent, or hallucinate any facts. If the answer is not in the facts, say exactly: "
+        "'I don't have that detail right now, but I can check and have our advisor get back to you.'\n"
+        f"- Respond in the requested active language: {language}."
+    )
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_text}
+    ]
+    try:
+        completion = await _client.chat.completions.create(
+            model=cfg.MODEL_NAME,
+            messages=messages,
+            temperature=0.1,
+            max_tokens=80
+        )
+        return (completion.choices[0].message.content or "").strip()
+    except Exception as exc:
+        logger.error("Failed generating chunk-based answer: %s", exc)
+        return "I don't have that detail right now, but I can check and have our advisor get back to you."
+
+
+async def _generate_llm_fallback_answer(
+    user_text: str,
+    summary_markdown: str,
+    language: str,
+) -> str:
+    """Fallback LLM call when no specific chunks are retrieved, using the whole summary context."""
+    system_prompt = (
+        "You are a factual customer advisory voice assistant.\n"
+        "Answer the user's question using the company summary context below.\n\n"
+        "Company Summary Context:\n"
+        f"{summary_markdown}\n\n"
+        "Constraints:\n"
+        "- Do not assume, guess, or hallucinate any details. If not found, say exactly: "
+        "'I don't have that detail right now, but I can check and have our advisor get back to you.'\n"
+        "- Max 2 sentences, 20-30 words.\n"
+        f"- Respond in the requested active language: {language}."
+    )
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_text}
+    ]
+    try:
+        completion = await _client.chat.completions.create(
+            model=cfg.MODEL_NAME,
+            messages=messages,
+            temperature=0.2,
+            max_tokens=80
+        )
+        return (completion.choices[0].message.content or "").strip()
+    except Exception as exc:
+        logger.error("Failed generating LLM fallback answer: %s", exc)
+        return "I don't have that detail right now, but I can check and have our advisor get back to you."
+
+
+def _get_resume_bridge(
+    current_node: dict[str, Any],
+    context: dict[str, Any],
+    language: str,
+) -> tuple[str, str]:
+    """Returns (resume_question, combined_bridge_text) to return to previous flow node."""
+    from .llm_response_generator import _resolve_template_response
+    
+    resume_question = _resolve_template_response(current_node, context, language)
+    if not resume_question:
+        return "", ""
+
+    resume_question_clean = resume_question.strip().rstrip("?").rstrip()
+    if not resume_question_clean:
+        return "", ""
+
+    if language in ("hi", "hinglish"):
+        prefix = "Toh, hamari baat-cheet par waapas aate hain, "
+    elif language == "mr":
+        prefix = "तर, आपल्या संभाषणाकडे परत येत, "
+    else:
+        prefix = "Now, coming back to our discussion, "
+
+    combined = f"{prefix}{resume_question_clean}?"
+    return resume_question_clean, combined
+
+
+async def generate_response(
+    user_text: str,
+    conversation_history: Optional[list[dict]] = None,
+    language: str = cfg.DEFAULT_LANGUAGE,
+    state_manager: Optional[Any] = None,
+    allow_transition: bool = True,
+    runtime_context: Optional[dict[str, Any]] = None,
+) -> tuple[str, bool]:
+    """Pipeline entry point: STT → Intent → StateManager (transition) → LLMResponseGenerator (response).
+
+    Clean architecture:
+    - StateManager handles ONLY state transitions (returns TurnResult)
+    - LLMResponseGenerator handles ONLY response generation
+    """
+    from .llm_response_generator import generate_response_for_turn
+    from .state_manager import _finalize_response_text
+
+    if state_manager is None:
+        from .state_manager import StateManager
+        state_manager = StateManager("Updated_Real_Estate_Agent.json")
+
+    if getattr(state_manager, "set_active_language", None):
+        state_manager.set_active_language(language)
+    if runtime_context:
+        state_manager.conversation_data.update(runtime_context)
+
+    current_node = state_manager.get_current_node()
+    current_node_id = state_manager.current_node_id
+
+    # ── Pre-Transition Interruption Check ─────────────────────────────────────
+    global_prompt = getattr(state_manager, "global_prompt", "") or state_manager.schema.get("global_prompt", "")
+    summary_markdown = _extract_summary_from_prompt(global_prompt)
+    
+    # Classify the input
+    classification = "node_response"
+    if current_node and user_text and user_text.strip():
+        classification = await _classify_message(user_text, current_node, language)
+
+    if classification == "company_question":
+        # Search JSON and Summary & Answer
+        nodes = state_manager.schema.get("conversationFlow", {}).get("nodes", [])
+        
+        # 1. JSON Lookup
+        json_answer = _search_json_knowledge(user_text, nodes)
+        json_matched = bool(json_answer)
+        
+        answer = ""
+        answer_source = "Unknown"
+        retrieved_headings = []
+        retrieved_scores = []
+        llm_called = False
+        context_len = 0
+        
+        if json_matched:
+            answer = json_answer
+            answer_source = "JSON"
+        else:
+            # 2. Semantic retrieval on summary
+            retrieved_headings, retrieved_chunks, retrieved_scores = _retrieve_semantic_chunks_tfidf(
+                user_text, summary_markdown
+            )
+            
+            if retrieved_chunks:
+                llm_called = True
+                answer = await _generate_answer_from_chunks(user_text, retrieved_chunks, language)
+                answer_source = "Summary"
+                context_len = sum(len(c) for c in retrieved_chunks)
+            else:
+                # 3. LLM fallback
+                llm_called = True
+                answer = await _generate_llm_fallback_answer(user_text, summary_markdown, language)
+                answer_source = "LLM"
+                context_len = len(summary_markdown)
+
+        # Get resume bridge
+        resume_question, resume_bridge = _get_resume_bridge(
+            current_node,
+            state_manager.conversation_data,
+            language,
+        )
+        
+        finalized_response = answer
+        if resume_bridge:
+            finalized_response = f"{answer} {resume_bridge}"
+
+        # Detailed runtime logs matching the user checklist exactly
+        logger.info(
+            "[INTERRUPTION LAYER]\n"
+            f"  - Incoming User Query: \"{user_text}\"\n"
+            f"  - Intent Classification: {classification}\n"
+            f"  - Current Conversation Node: {current_node_id}\n"
+            f"  - JSON Search: Checked {len(nodes)} nodes\n"
+            f"  - JSON Match Found?: {json_matched}\n"
+            f"  - Company Summary Loaded: {bool(summary_markdown)}\n"
+            f"  - Semantic Retrieval Started: True\n"
+            f"  - Retrieved Chunks: {retrieved_headings}\n"
+            f"  - Similarity Scores: {retrieved_scores}\n"
+            f"  - LLM Invoked?: {llm_called}\n"
+            f"  - LLM Context Size: {context_len} chars\n"
+            f"  - Final Answer Source: {answer_source}\n"
+            f"  - Resume Previous Node: \"{resume_question}\""
+        )
+        
+        # Record response for anti-repetition
+        if hasattr(state_manager, "record_response"):
+            state_manager.record_response(finalized_response)
+            
+        # Return answer + resume bridge, is_terminal=False
+        return finalized_response, False
+
+    # ── Step 1: StateManager — transition only (no response generation) ──
+    if not allow_transition:
+        turn = await asyncio.to_thread(state_manager.execute_greeting_transition, user_text)
+    elif getattr(state_manager, "is_actionable", None) and not state_manager.is_actionable(user_text):
+        turn = await asyncio.to_thread(state_manager.execute_noise_transition, user_text)
+    else:
+        intent_data = await extract_intent(user_text, state_manager=state_manager)
+        turn = await asyncio.to_thread(state_manager.execute_transition, user_text, intent_data)
+
+    if not turn.node:
+        return "", turn.is_terminal
+
+    # ── Step 2: LLMResponseGenerator — response only ─────────────────────
+    response = await generate_response_for_turn(turn, state_manager=state_manager)
+    finalized = _finalize_response_text(response).strip()
+
+    # ── Step 3: Record response for anti-repetition tracking ─────────────
+    if hasattr(state_manager, "record_response"):
+        state_manager.record_response(finalized)
+
+    return finalized, turn.is_terminal
+

@@ -1,0 +1,277 @@
+{
+  "schema_version": "2.0",
+  "id": "flowv2_e40229e18d3d",
+  "agent_id": "tts-test-agent",
+  "agent_name": "Neha \u2014 Real Estate Specialist (Parler TTS)",
+  "agent_type": "real_estate_sales",
+  "status": "published",
+  "runtime_mode": "live",
+  "default_locale": "en",
+  "supported_locales": [
+    "en",
+    "hi",
+    "mr"
+  ],
+  "start_node_id": "start",
+  "global_prompt": "You are a professional real estate sales voice agent for a property advisory team.\n\nPrimary goal:\nQualify the lead for buying, renting, or investing in residential property and capture the next best action.\n\nConversation style:\nBe warm, concise, consultative, and natural. Ask one question at a time. Do not sound like a form. Use the user's language style when possible: English, Hindi, Marathi, or Hinglish.\n\nDiscovery questions:\n1. Confirm whether they are looking to buy, rent, or invest.\n2. Ask preferred location or project area.\n3. Ask budget range.\n4. Ask property type such as 1 BHK, 2 BHK, 3 BHK, villa, plot, or commercial.\n5. Ask timeline such as immediate, this month, 3 months, or just exploring.\n6. Ask if they want a callback, site visit, WhatsApp details, or brochure.\n\nRules:\nNever overpromise pricing, availability, loan approval, legal clearance, or possession date. If the user asks for exact details, say the specialist will verify and share updated information.\n\nFinal outcome:\nSummarize the requirement in one sentence and confirm the follow-up action.\n\nWebsite intelligence source: https://www.suncityprojects.com.\nComplete Company Knowledge Summary:\n# Suncity Projects\n\nSuncity Projects is one of the most eminent real estate companies in North India. The Group has built an unshakable reputation for quality, efficiency, trust, and meticulous planning.\n\n## Mission\n\nOur mission is to create exceptional real estate developments that exceed our customers' expectations.\n\n## Vision\n\nOur vision is to be the leading real estate company in North India, known for our innovative designs, world-class construction standards, and strong community values.\n\n## Products\n\nWe offer a range of products, including townships, group housing, luxury apartments, shopping malls, and office complexes.\n\n## Services\n\nOur services include real estate development, construction, and project management.\n\n## Pricing\n\nPricing information is not publicly available.\n\n## FAQs\n\nHow can we help you today?\n\nAt Suncity Projects Pvt. Ltd., our customers are our top priority. Please feel free to contact us with any questions or concerns you may have.\n\n## Contact Info\n\nEmail: info@suncityprojects.com\nPhone: +91 120 4567890\nAddress: Suncity Projects Pvt. Ltd., Sector 54, Gurgaon, Haryana, India\nContact Form: https://www.suncityprojects.com/contact-us\n\n## Technologies\n\nWe use a range of technologies, including AI, Cloud, APIs, SaaS, Security, Machine Learning, and Blockchain.\n\n## Industries Served\n\nWe serve the real estate industry.\n\n## Target Customers\n\nOur target customers are individuals and families.\n\n## Competitive Advantages\n\nOur competitive advantages include quality, efficiency, trust, and meticulous planning.\n\n## Customer Testimonials\n\nSuncity Projects has exceeded my expectations with their exceptional real estate developments and timely delivery.\n\n## Careers\n\nWe are always looking for talented individuals to join our team. Please visit our website for current job openings.\n\n## News Blog Summary\n\nSuncity Projects has been featured in leading publications for its innovation, trust, and timely delivery. Our projects continue to capture headlines for setting benchmarks in design and execution.\n\n## Policies\n\nWe have a range of policies, including a Privacy Policy and Terms of Service.\n\n## Additional Info\n\nSuncity Projects Pvt. Ltd. is a pioneer in creating exceptional real estate developments, ranging from townships and luxury apartments to shopping malls and office complexes.\nUse only verified website facts and keep unsupported claims out of the call.",
+  "slots": [
+    {
+      "id": "Name",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "Location",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "Budget",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "Property Type",
+      "required": true,
+      "source": "conversation"
+    },
+    {
+      "id": "Interested",
+      "required": true,
+      "source": "conversation"
+    }
+  ],
+  "intents": [
+    {
+      "id": "confirm",
+      "examples": [
+        "yes",
+        "okay",
+        "sure"
+      ]
+    },
+    {
+      "id": "deny",
+      "examples": [
+        "no",
+        "not interested"
+      ]
+    },
+    {
+      "id": "unclear",
+      "examples": [
+        "hmm",
+        "repeat"
+      ]
+    },
+    {
+      "id": "provide_info",
+      "examples": [
+        "my budget is 50 lakh"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "message",
+      "label": "Greeting",
+      "response": {
+        "en": "Hello, this is Neha \u2014 Real Estate Specialist (Parler TTS). Am I speaking with {{name}}?"
+      },
+      "transitions": [
+        {
+          "intent": "confirm",
+          "target": "discovery"
+        },
+        {
+          "intent": "deny",
+          "target": "end"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback"
+        }
+      ]
+    },
+    {
+      "id": "discovery",
+      "type": "slot_collection",
+      "label": "Discovery",
+      "collects": [
+        "Name",
+        "Location",
+        "Budget",
+        "Property Type",
+        "Interested"
+      ],
+      "response": {
+        "en": "Could you share a little about what you are looking for?"
+      },
+      "transitions": [
+        {
+          "intent": "provide_info",
+          "target": "confirm_followup"
+        },
+        {
+          "intent": "confirm",
+          "target": "confirm_followup"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback"
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "type": "fallback",
+      "label": "Clarify",
+      "response": {
+        "en": "Sorry, I did not catch that clearly. Could you repeat it once?"
+      },
+      "fallback": {
+        "max_attempts": 2,
+        "escalation_target": "end"
+      },
+      "transitions": [
+        {
+          "intent": "provide_info",
+          "target": "discovery"
+        },
+        {
+          "intent": "confirm",
+          "target": "discovery"
+        },
+        {
+          "intent": "deny",
+          "target": "end"
+        }
+      ]
+    },
+    {
+      "id": "confirm_followup",
+      "type": "message",
+      "label": "Confirm Follow-up",
+      "response": {
+        "en": "Thanks. I will have the team follow up with the right details."
+      },
+      "transitions": [
+        {
+          "intent": "confirm",
+          "target": "end"
+        },
+        {
+          "intent": "deny",
+          "target": "end"
+        },
+        {
+          "intent": "unclear",
+          "target": "fallback"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "End",
+      "response": {
+        "en": "Thank you. Have a good day."
+      },
+      "transitions": []
+    }
+  ],
+  "metadata": {
+    "source": "website_intelligence",
+    "source_language": "English",
+    "validation_required": true,
+    "source_url": "https://www.suncityprojects.com",
+    "industry": "real_estate",
+    "review_required": true,
+    "website_intelligence": {
+      "domain": "www.suncityprojects.com",
+      "source_url": "https://www.suncityprojects.com",
+      "industry": "real_estate",
+      "advisory_only": true,
+      "auto_publish": false,
+      "quality": {
+        "score": 100,
+        "level": "high",
+        "ready_for_review": true,
+        "warnings": []
+      },
+      "evidence_urls": [
+        "https://www.suncityprojects.com",
+        "https://www.suncityprojects.com/",
+        "https://www.suncityprojects.com/projects",
+        "https://www.suncityprojects.com/about-us",
+        "https://www.suncityprojects.com/residential-projects",
+        "https://www.suncityprojects.com/commercial-projects",
+        "https://www.suncityprojects.com/retail-projects",
+        "https://www.suncityprojects.com/education-projects",
+        "https://www.suncityprojects.com/delivered-projects",
+        "https://www.suncityprojects.com/nri-corner",
+        "https://www.suncityprojects.com/in-the-news",
+        "https://www.suncityprojects.com/press-release"
+      ],
+      "content_inventory": {
+        "page_types": {
+          "blog": 4,
+          "general": 12,
+          "about": 1,
+          "faq": 1,
+          "contact": 2
+        },
+        "has_services": false,
+        "has_faq": true,
+        "has_contact": true,
+        "noise_filtered": true
+      },
+      "review_checklist": [
+        {
+          "key": "human_review_required",
+          "label": "Human review required before publishing",
+          "passed": true
+        },
+        {
+          "key": "quality_ready_for_review",
+          "label": "Extraction quality is ready for review",
+          "passed": true
+        },
+        {
+          "key": "source_evidence_present",
+          "label": "Website evidence URLs are attached",
+          "passed": true
+        },
+        {
+          "key": "services_detected",
+          "label": "Products or services were detected",
+          "passed": true
+        },
+        {
+          "key": "conversation_guidance_present",
+          "label": "Qualification or objection guidance is present",
+          "passed": true
+        },
+        {
+          "key": "noise_filtered",
+          "label": "Crawler noise filtering was applied",
+          "passed": true
+        }
+      ],
+      "limitations": [
+        "Only public website content fetched within configured crawl limits was used.",
+        "Human review is required before publishing any generated workflow."
+      ]
+    },
+    "applied_from_script_draft_id": "193dfe40-4055-47ae-8195-31ff4f8a6575",
+    "live_runtime_unchanged": false,
+    "published_at": "2026-07-03T00:23:07.254292",
+    "published_to": "v1_runtime_schema"
+  },
+  "validation": {
+    "status": "valid",
+    "node_count": 5,
+    "terminal_count": 1
+  }
+}
